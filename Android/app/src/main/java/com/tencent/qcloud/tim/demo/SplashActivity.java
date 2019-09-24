@@ -1,17 +1,12 @@
 package com.tencent.qcloud.tim.demo;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.text.TextUtils;
 import android.view.View;
 import android.view.WindowManager;
 
 import com.tencent.qcloud.tim.demo.login.LoginForDevActivity;
-import com.tencent.qcloud.tim.demo.utils.Constants;
-import com.tencent.qcloud.tim.uikit.utils.ToastUtil;
 
 public class SplashActivity extends Activity {
 
@@ -23,7 +18,7 @@ public class SplashActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash);
-
+        System.out.println("-=-=-=>>TAG = " + Thread.currentThread().getId());
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION);
 
@@ -31,10 +26,14 @@ public class SplashActivity extends Activity {
         handleData();
     }
 
+    /**
+     * sca：postDelayed新线程？
+     */
     private void handleData() {
         mFlashView.postDelayed(new Runnable() {
             @Override
             public void run() {
+                System.out.println("-=-=-=>>TAG = " + Thread.currentThread().getId());
                 startLogin();
             }
         }, SPLASH_TIME);
