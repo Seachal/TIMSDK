@@ -3,10 +3,12 @@ package com.tencent.qcloud.tim.uikit.modules.group.info;
 import android.text.TextUtils;
 
 import com.tencent.imsdk.TIMCallBack;
+import com.tencent.imsdk.TIMFriendshipManager;
 import com.tencent.imsdk.TIMGroupAddOpt;
 import com.tencent.imsdk.TIMGroupManager;
 import com.tencent.imsdk.TIMGroupMemberInfo;
 import com.tencent.imsdk.TIMManager;
+import com.tencent.imsdk.TIMUserProfile;
 import com.tencent.imsdk.TIMValueCallBack;
 import com.tencent.imsdk.ext.group.TIMGroupDetailInfoResult;
 import com.tencent.imsdk.ext.group.TIMGroupMemberResult;
@@ -132,7 +134,50 @@ public class GroupInfoProvider {
                 List<GroupMemberInfo> members = new ArrayList<>();
                 for (int i = 0; i < timGroupMemberInfos.size(); i++) {
                     GroupMemberInfo member = new GroupMemberInfo();
-                    members.add(member.covertTIMGroupMemberInfo(timGroupMemberInfos.get(i)));
+                     final GroupMemberInfo groupMemberInfo = member.covertTIMGroupMemberInfo(timGroupMemberInfos.get(i));
+//                    groupMemberInfo.setIconUrl("https://wapimg.66826.com/Pics/2018/1103/c_518/c0ccbe02ad374e7ea226dec2f2007706.jpg");
+
+
+//                    String title = conversation.getPeer();
+                    String faceUrl = null;
+                    final ArrayList<String> ids = new ArrayList<>();
+                    ids.add(groupMemberInfo.getAccount());
+                    TIMUserProfile profile = TIMFriendshipManager.getInstance().queryUserProfile(groupMemberInfo.getAccount());
+                    if (profile == null) {
+                        TIMFriendshipManager.getInstance().getUsersProfile(ids, false, new TIMValueCallBack<List<TIMUserProfile>>() {
+                            @Override
+                            public void onError(int code, String desc) {
+                                TUIKitLog.e(TAG, "getUsersProfile failed! code: " + code + " desc: " + desc);
+                            }
+
+                            @Override
+                            public void onSuccess(List<TIMUserProfile> timUserProfiles) {
+                                if (timUserProfiles == null || timUserProfiles.size() != 1) {
+                                    TUIKitLog.i(TAG, "No TIMUserProfile");
+                                    return;
+                                }
+                                TIMUserProfile profile = timUserProfiles.get(0);
+                                String faceUrl = null;
+                                if (profile != null && !TextUtils.isEmpty(profile.getFaceUrl())) {
+                                    faceUrl = profile.getFaceUrl();
+                                }
+//                                String title = conversation.getPeer();
+//                                if (profile != null && !TextUtils.isEmpty(profile.getNickName())) {
+//                                    title = profile.getNickName();
+//                                }
+//                                info.setTitle(title);
+//                                groupMemberInfo.setIconUrl("https://wapimg.66826.com/Pics/2018/1103/c_518/c0ccbe02ad374e7ea226dec2f2007706.jpg");
+                                  groupMemberInfo.setIconUrl(faceUrl);
+//                                mProvider.updateAdapter();
+                            }
+                        });
+                    }else {
+                        if (!TextUtils.isEmpty(profile.getFaceUrl())) {
+                            faceUrl = profile.getFaceUrl();
+                        }
+                        groupMemberInfo.setIconUrl(faceUrl);
+                    }
+                    members.add(groupMemberInfo);
                 }
                 mGroupMembers = members;
                 mGroupInfo.setMemberDetails(mGroupMembers);
@@ -181,7 +226,9 @@ public class GroupInfoProvider {
                 for (int i = begin; i < end; i++) {
                     GroupMemberInfo memberInfo = mGroupMembers.get(i);
                     for (int j = timGroupMemberInfos.size() - 1; j >= 0; j--) {
+
                         TIMGroupMemberInfo detail = timGroupMemberInfos.get(j);
+
                         if (memberInfo.getAccount().equals(detail.getUser())) {
                             memberInfo.setDetail(detail);
                             timGroupMemberInfos.remove(j);
