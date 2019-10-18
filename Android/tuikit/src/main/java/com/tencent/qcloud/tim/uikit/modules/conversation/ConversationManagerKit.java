@@ -18,6 +18,7 @@ import com.tencent.imsdk.TIMRefreshListener;
 import com.tencent.imsdk.TIMUserProfile;
 import com.tencent.imsdk.TIMValueCallBack;
 import com.tencent.imsdk.ext.group.TIMGroupDetailInfo;
+import com.tencent.imsdk.ext.group.TIMGroupDetailInfoResult;
 import com.tencent.imsdk.ext.message.TIMMessageLocator;
 import com.tencent.imsdk.friendship.TIMFriend;
 import com.tencent.qcloud.tim.uikit.TUIKit;
@@ -49,6 +50,10 @@ public class ConversationManagerKit implements TIMRefreshListener, MessageRevoke
     private LinkedList<ConversationInfo> mTopLinkedList = new LinkedList<>();
     private int mUnreadTotal;
 
+    private ConversationManagerKit() {
+        init();
+    }
+
     public static ConversationManagerKit getInstance() {
         return instance;
     }
@@ -58,10 +63,6 @@ public class ConversationManagerKit implements TIMRefreshListener, MessageRevoke
         mConversationPreferences = TUIKit.getAppContext().getSharedPreferences(TIMManager.getInstance().getLoginUser() + SP_NAME, Context.MODE_PRIVATE);
         mTopLinkedList = SharedPreferenceUtils.getListData(mConversationPreferences, TOP_LIST, ConversationInfo.class);
         MessageRevokedManager.getInstance().addHandler(this);
-    }
-
-    private ConversationManagerKit() {
-        init();
     }
 
     /**
@@ -211,16 +212,50 @@ public class ConversationManagerKit implements TIMRefreshListener, MessageRevoke
         }
 
         boolean isGroup = type == TIMConversationType.Group;
-        info.setLastMessageTime(message.timestamp() * 1000);
+        info.setLastMessageTime(message.timestamp());
         List<MessageInfo> list = MessageInfoUtil.TIMMessage2MessageInfo(message, isGroup);
         if (list != null && list.size() > 0) {
             info.setLastMessage(list.get(list.size() - 1));
         }
         if (isGroup) {
-            info.setTitle(conversation.getGroupName());
             TIMGroupDetailInfo groupDetailInfo = TIMGroupManager.getInstance().queryGroupInfo(conversation.getPeer());
-            if (groupDetailInfo != null && !TextUtils.isEmpty(groupDetailInfo.getFaceUrl())) {
+            if (groupDetailInfo == null) {
+                if (TextUtils.isEmpty(conversation.getGroupName())) {
+                    info.setTitle(conversation.getPeer());
+                } else {
+                    info.setTitle(conversation.getGroupName());
+                }
+                final ArrayList<String> ids = new ArrayList<>();
+                ids.add(conversation.getPeer());
+                TIMGroupManager.getInstance().getGroupInfo(ids, new TIMValueCallBack<List<TIMGroupDetailInfoResult>>() {
+                    @Override
+                    public void onError(int code, String desc) {
+                        TUIKitLog.e(TAG, "getGroupInfo failed! code: " + code + " desc: " + desc);
+                    }
+
+                    @Override
+                    public void onSuccess(List<TIMGroupDetailInfoResult> timGroupDetailInfoResults) {
+                        if (timGroupDetailInfoResults == null || timGroupDetailInfoResults.size() != 1) {
+                            TUIKitLog.i(TAG, "No GroupInfo");
+                            return;
+                        }
+                        TIMGroupDetailInfoResult result = timGroupDetailInfoResults.get(0);
+                        if (result != null) {
+                            if (TextUtils.isEmpty(result.getGroupName())) {
+                                info.setTitle(result.getGroupId());
+                            } else {
+                                info.setTitle(result.getGroupName());
+                            }
+                        }
+                    }
+                });
+            } else {
                 info.setIconUrl(groupDetailInfo.getFaceUrl());
+                if (TextUtils.isEmpty(groupDetailInfo.getGroupName())) {
+                    info.setTitle(groupDetailInfo.getGroupId());
+                } else {
+                    info.setTitle(groupDetailInfo.getGroupName());
+                }
             }
         } else {
             String title = conversation.getPeer();

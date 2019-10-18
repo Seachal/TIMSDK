@@ -215,13 +215,17 @@ public class ChatLayoutHelper {
 
         /**
          * 自定义消息渲染时，会调用该方法，本方法实现了自定义消息的创建，以及交互逻辑
+         *
          * @param parent 自定义消息显示的父View，需要把创建的自定义消息view添加到parent里
-         * @param info 消息的具体信息
+         * @param info   消息的具体信息
          */
         @Override
         public void onDraw(ICustomMessageViewGroup parent, MessageInfo info) {
             // 获取到自定义消息的json数据
-            TIMCustomElem elem = (TIMCustomElem) info.getTIMMessage().getElement(0);
+            if (!(info.getElement() instanceof TIMCustomElem)) {
+                return;
+            }
+            TIMCustomElem elem = (TIMCustomElem) info.getElement();
             // 自定义的json数据，需要解析成bean实例
             CustomMessageData data = null;
             try {
