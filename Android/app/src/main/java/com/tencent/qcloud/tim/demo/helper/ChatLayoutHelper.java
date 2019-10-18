@@ -2,7 +2,6 @@ package com.tencent.qcloud.tim.demo.helper;
 
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -17,9 +16,6 @@ import com.tencent.imsdk.TIMCustomElem;
 import com.tencent.qcloud.tim.demo.DemoApplication;
 import com.tencent.qcloud.tim.demo.R;
 import com.tencent.qcloud.tim.demo.utils.DemoLog;
-import com.tencent.qcloud.tim.uikit.component.NoticeLayout;
-import com.tencent.qcloud.tim.uikit.component.action.PopActionClickListener;
-import com.tencent.qcloud.tim.uikit.component.action.PopMenuAction;
 import com.tencent.qcloud.tim.uikit.modules.chat.ChatLayout;
 import com.tencent.qcloud.tim.uikit.modules.chat.base.BaseInputFragment;
 import com.tencent.qcloud.tim.uikit.modules.chat.layout.input.InputLayout;
@@ -211,7 +207,7 @@ public class ChatLayoutHelper {
      */
     public static class CustomMessageData {
         int version = 1;
-        String text = "欢迎加入云通信IM大家庭！";
+        String text = "欢迎加入云通信IM大家庭sc！";
         String link = "https://cloud.tencent.com/document/product/269/3794";
     }
 
