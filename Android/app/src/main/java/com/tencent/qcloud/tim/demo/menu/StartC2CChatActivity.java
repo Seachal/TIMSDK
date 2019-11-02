@@ -93,6 +93,7 @@ public class StartC2CChatActivity extends BaseActivity {
         chatInfo.setChatName(chatName);
         Intent intent = new Intent(DemoApplication.instance(), ChatActivity.class);
         intent.putExtra(Constants.CHAT_INFO, chatInfo);
+        intent.putExtra(Constants.ChatFragment,Constants.ChatFragment);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         DemoApplication.instance().startActivity(intent);
 

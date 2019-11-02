@@ -21,6 +21,7 @@ public class ChatActivity extends BaseActivity {
         setContentView(R.layout.chat_activity);
 
         Bundle bundle = getIntent().getExtras();
+
         if (bundle == null) {
             startSplashActivity();
         } else {
