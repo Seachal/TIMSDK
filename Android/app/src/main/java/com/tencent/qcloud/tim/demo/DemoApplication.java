@@ -24,6 +24,8 @@ import com.tencent.imsdk.TIMOfflinePushNotification;
 import com.tencent.imsdk.session.SessionWrapper;
 import com.tencent.imsdk.utils.IMFunc;
 import com.tencent.qcloud.tim.demo.helper.ConfigHelper;
+import com.tencent.qcloud.tim.demo.helper.CustomAVCallUIController;
+import com.tencent.qcloud.tim.demo.helper.CustomMessage;
 import com.tencent.qcloud.tim.demo.signature.GenerateTestUserSig;
 import com.tencent.qcloud.tim.demo.thirdpush.ThirdPushTokenMgr;
 import com.tencent.qcloud.tim.demo.utils.DemoLog;
@@ -49,6 +51,7 @@ public class DemoApplication extends Application {
     public void onCreate() {
         DemoLog.i(TAG, "onCreate");
         super.onCreate();
+        instance = this;
         MultiDex.install(this);
         // bugly上报
         CrashReport.UserStrategy strategy = new CrashReport.UserStrategy(getApplicationContext());
@@ -99,13 +102,21 @@ public class DemoApplication extends Application {
 
             registerActivityLifecycleCallbacks(new StatisticActivityLifecycleCallback());
         }
-        instance = this;
-        if (BuildConfig.DEBUG) {
-            if (LeakCanary.isInAnalyzerProcess(this)) {
-                return;
+//        if (BuildConfig.DEBUG) {
+//            if (LeakCanary.isInAnalyzerProcess(this)) {
+//                return;
+//            }
+//            LeakCanary.install(this);
+//        }
+        CustomAVCallUIController.getInstance().onCreate();
+        IMEventListener imEventListener = new IMEventListener() {
+            @Override
+            public void onNewMessages(List<TIMMessage> msgs) {
+                DemoLog.i(TAG, "onNewMessages");
+                CustomAVCallUIController.getInstance().onNewMessage(msgs);
             }
-            LeakCanary.install(this);
-        }
+        };
+        TUIKit.addIMEventListener(imEventListener);
     }
 
     class StatisticActivityLifecycleCallback implements ActivityLifecycleCallbacks {
@@ -114,6 +125,10 @@ public class DemoApplication extends Application {
         private IMEventListener mIMEventListener = new IMEventListener() {
             @Override
             public void onNewMessages(List<TIMMessage> msgs) {
+                if (CustomMessage.convert2VideoCallData(msgs) != null) {
+                    // 会弹出接电话的对话框，不再需要通知
+                    return;
+                }
                 for (TIMMessage msg : msgs) {
                     // 小米手机需要在设置里面把demo的"后台弹出权限"打开才能点击Notification跳转。TIMOfflinePushNotification后续不再维护，如有需要，建议应用自己调用系统api弹通知栏消息。
                     TIMOfflinePushNotification notification = new TIMOfflinePushNotification(DemoApplication.this, msg);

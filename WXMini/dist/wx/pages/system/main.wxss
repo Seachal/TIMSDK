@@ -13,18 +13,19 @@
   border-radius: 24rpx;
 }
 .card .time.data-v-5e5810f9 {
-  color: #5cadff;
+  font-weight: 600;
+  color: #111;
 }
 .button.data-v-5e5810f9 {
   color: #fff;
-  background-color: #2d8cf0;
+  background-color: #006fff;
   border-radius: 16rpx;
   line-height: 60rpx;
   font-size: 32rpx;
   width: 140rpx;
 }
 .delete.data-v-5e5810f9 {
-  background-color: #ed3f14;
+  background-color: #fb5250;
 }
 .choose.data-v-5e5810f9 {
   display: flex;

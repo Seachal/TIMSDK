@@ -28,9 +28,8 @@
               </div>
             </div>
             <div class="unread-count">
-              <span class="badge" v-if="conversation.unreadCount > 0">
-                {{conversation.unreadCount}}
-                <template v-if="conversation.unreadCount > 99">+</template>
+              <span class="badge" v-if="showUnreadCount">
+                {{conversation.unreadCount > 99 ? '99+' : conversation.unreadCount}}
               </span>
             </div>
           </div>
@@ -39,7 +38,7 @@
               <div v-if="conversation.lastMessage" class="text-ellipsis">
                 <span class="remind" style="color:red;" v-if="hasMessageAtMe">[有人提到我]</span>
                 <span class="text" :title="conversation.lastMessage.messageForShow">
-                  {{conversation.lastMessage.messageForShow}}
+                  {{messageForShow}}
                 </span>
               </div>
             </div>
@@ -67,6 +66,9 @@ export default {
   },
   computed: {
     showUnreadCount() {
+      if (this.$store.getters.hidden) {
+        return this.conversation.unreadCount > 0
+      }
       // 是否显示未读计数。当前会话和未读计数为0的会话，不显示。
       return (
         this.currentConversation.conversationID !==
@@ -117,8 +119,21 @@ export default {
         'AcceptNotNotify'
       )
     },
+    messageForShow() {
+      if (this.conversation.lastMessage.isRevoked) {
+        if (this.conversation.lastMessage.fromAccount === this.currentUserProfile.userID) {
+          return '你撤回了一条消息'
+        }
+        if (this.conversation.type === this.TIM.TYPES.CONV_C2C) {
+          return '对方撤回了一条消息'
+        }
+        return `${this.conversation.lastMessage.fromAccount}撤回了一条消息`
+      }
+      return this.conversation.lastMessage.messageForShow
+    },
     ...mapState({
-      currentConversation: state => state.conversation.currentConversation
+      currentConversation: state => state.conversation.currentConversation,
+      currentUserProfile: state => state.user.currentUserProfile
     }),
     ...mapGetters(['toAccount'])
   },
@@ -135,7 +150,7 @@ export default {
   },
   methods: {
     selectConversation() {
-      if (this.conversation.conversationID !== this.$store.state.conversation.currentConversation.conversationID) {
+      if (this.conversation.conversationID !== this.currentConversation.conversationID) {
         this.$store.dispatch(
           'checkoutConversation',
           this.conversation.conversationID

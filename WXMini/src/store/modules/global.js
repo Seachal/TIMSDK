@@ -1,9 +1,11 @@
 const globalModules = {
   state: {
-    isSdkReady: false
+    isSdkReady: false,
+    isCalling: false
   },
   getters: {
-    isSdkReady: state => state.isSdkReady
+    isSdkReady: state => state.isSdkReady,
+    isCalling: state => state.isCalling
   },
   mutations: {
     showToast (state, payload) {
@@ -15,10 +17,13 @@ const globalModules = {
     },
     setSdkReady (state, payload) {
       state.isSdkReady = payload
+    },
+    setCalling (state, payload) {
+      state.isCalling = payload
     }
   },
-  action: {
-    kickedReset (context) {
+  actions: {
+    resetStore (context) {
       context.commit('resetGroup')
       context.commit('resetUser')
       context.commit('resetCurrentConversation')

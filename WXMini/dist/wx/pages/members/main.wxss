@@ -1,6 +1,6 @@
 
 .search.data-v-1f364c65 {
-  background-color: #e7e9ea;
+  background-color: #ededed;
   padding: 16rpx 16rpx 16rpx 16rpx;
 }
 .input.data-v-1f364c65 {
@@ -9,7 +9,7 @@
   background-color: #fff;
   border-radius: 16rpx;
   font-size: 32rpx;
-  border: 2rpx solid #dddee1;
+  border: 2rpx solid #dbdbdb;
 }
 .avatar.data-v-1f364c65 {
   padding-right: 20rpx;
@@ -20,10 +20,10 @@
 .chat.data-v-1f364c65 {
   line-height: 64rpx;
   padding: 20rpx;
-  background-color: #f8f8f9;
+  background-color: #ededed;
   margin-bottom: -2rpx;
-  border-top: 2rpx solid #dddee1;
-  border-bottom: 2rpx solid #dddee1;
+  border-top: 2rpx solid #dbdbdb;
+  border-bottom: 2rpx solid #dbdbdb;
 }
 .right.data-v-1f364c65 {
   padding: 0 36rpx 0 16rpx;
@@ -38,7 +38,7 @@
 }
 .username.data-v-1f364c65 {
   font-size: 28rpx;
-  color: #1c2438;
+  color: #111;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -55,7 +55,7 @@
 .remain.data-v-1f364c65 {
   color: #fff;
   font-size: 24rpx;
-  background-color: #ed3f14;
+  background-color: #fb5250;
   border-radius: 16rpx;
   padding: 4rpx 16rpx;
 }

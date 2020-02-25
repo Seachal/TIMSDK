@@ -1,5 +1,5 @@
 <template>
-  <message-bubble :isMine="false">
+  <message-bubble :isMine="false" :message=message>
     <div class="group-system-element-wrapper">
       {{ text }}
       <el-button v-if="isJoinGroupRequest" type="text" @click="showDialog = true">处理</el-button>
@@ -53,7 +53,7 @@ export default {
     ElFormItem: FormItem,
     ElRadioGroup: RadioGroup,
     ElRadio: Radio,
-    MessageBubble,
+    MessageBubble
   },
   data() {
     return {
@@ -88,8 +88,13 @@ export default {
         })
         .then(() => {
           this.showDialog = false
+          this.$store.commit('removeMessage', this.message)
         })
-        .catch(() => {
+        .catch(error => {
+          this.$store.commit('showMessage', {
+            type: 'error',
+            message: error.message
+          })
           this.showDialog = false
         })
     }

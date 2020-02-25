@@ -1,24 +1,24 @@
 <template>
   <div class="list-container">
+    <div class="header-bar">
+      <el-autocomplete
+        :value-key="'groupID'"
+        :debounce="500"
+        size="mini"
+        v-model="groupID"
+        placeholder="输入群ID搜索"
+        :fetch-suggestions="searchGroupByID"
+        class="group-seach-bar"
+        prefix-icon="el-icon-search"
+        :hide-loading="hideSearchLoading"
+        @input="hideSearchLoading = false"
+        @select="applyJoinGroup"
+      ></el-autocomplete>
+      <button title="创建群组" @click="showCreateGroupModel">
+        <i class="tim-icon-add"></i>
+      </button>
+    </div>
     <div class="group-container">
-      <div class="header-bar">
-        <el-autocomplete
-          :value-key="'groupID'"
-          :debounce="500"
-          size="mini"
-          v-model="groupID"
-          placeholder="输入群ID搜索"
-          :fetch-suggestions="searchGroupByID"
-          class="group-seach-bar"
-          prefix-icon="el-icon-search"
-          :hide-loading="hideSearchLoading"
-          @input="hideSearchLoading = false"
-          @select="applyJoinGroup"
-        ></el-autocomplete>
-        <button title="创建群组" @click="showCreateGroupModel">
-          <i class="tim-icon-add"></i>
-        </button>
-      </div>
       <group-item v-for="group in groupList" :key="group.groupID" :group="group" />
       <el-dialog title="创建群组" :visible="createGroupModelVisible" @close="closeCreateGroupModel" width="30%">
         <create-group></create-group>
@@ -86,8 +86,8 @@ export default {
     },
     applyJoinGroup(group) {
       this.tim
-        .joinGroup({ groupID: group.groupID, type: group.type })
-        .then(res => {
+        .joinGroup({ groupID: group.groupID })
+        .then(async res => {
           switch(res.data.status) {
             case this.TIM.TYPES.JOIN_STATUS_WAIT_APPROVAL:
               this.$store.commit('showMessage', {
@@ -96,6 +96,10 @@ export default {
               })
               break
             case this.TIM.TYPES.JOIN_STATUS_SUCCESS:
+              await this.$store.dispatch(
+                'checkoutConversation',
+                `GROUP${res.data.group.groupID}`
+              )
               this.$store.commit('showMessage', {
                 message: '加群成功',
                 type: 'success'
@@ -112,7 +116,7 @@ export default {
         })
         .catch(error => {
           this.$store.commit('showMessage', {
-            message: error.error.message,
+            message: error.message,
             type: 'error'
           })
         })
@@ -127,6 +131,8 @@ export default {
   width 100%
   display flex
   flex-direction column
+  .group-container 
+    overflow-y scroll
   .header-bar
     display: flex;
     flex-shrink 0

@@ -9,6 +9,11 @@
         <input type="text" class="input" placeholder="输入回复" v-model.lazy:value="text"/>
       </div>
     </i-modal>
+    <div v-if="currentMessageList.length === 0">
+      <div class="card">
+        暂无系统消息
+      </div>
+    </div>
     <div v-for="message in currentMessageList" :key="message.ID">
       <div v-if="message.payload.operationType === 1" class="card handle">
         <div>
@@ -48,6 +53,16 @@ export default {
         return [...state.conversation.currentMessageList].reverse()
       }
     })
+  },
+  onShow () {
+    let interval = setInterval(() => {
+      if (this.currentMessageList.length !== 0) {
+        wx.pageScrollTo({
+          scrollTop: 99999
+        })
+        clearInterval(interval)
+      }
+    }, 600)
   },
   methods: {
     handleChange (e) {
@@ -91,7 +106,8 @@ export default {
   background-color #f0faff
   border-radius 12px
   .time
-    color $light-primary
+    font-weight 600
+    color $base
 .button
   color white
   background-color $primary

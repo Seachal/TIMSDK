@@ -1,5 +1,6 @@
 import { formatTime } from '../../utils/index'
 import { decodeElement } from '../../utils/decodeElement'
+import TIM from 'tim-wx-sdk'
 
 const conversationModules = {
   state: {
@@ -40,7 +41,16 @@ const conversationModules = {
       return ''
     },
     currentConversation: state => state.currentConversation,
-    currentMessageList: state => state.currentMessageList
+    currentMessageList: state => state.currentMessageList,
+    totalUnreadCount: state => {
+      const result = state.allConversation.reduce((count, { unreadCount }) => count + unreadCount, 0)
+      if (result === 0) {
+        wx.removeTabBarBadge({ index: 0 })
+      } else {
+        wx.setTabBarBadge({ index: 0, text: result > 99 ? '99+' : String(result) })
+      }
+      return result
+    }
   },
   mutations: {
     // 历史头插消息列表
@@ -108,10 +118,6 @@ const conversationModules = {
     },
     changeMessageStatus (state, index) {
       state.currentMessageList[index].status = 'fail'
-    },
-    offAtRemind (state, conversation) {
-      let item = state.allConversation.filter(item => item.conversationID === conversation.conversationID)[0]
-      item.lastMessage.at = false
     }
   },
   actions: {
@@ -143,11 +149,6 @@ const conversationModules = {
             context.commit('unshiftMessageList', res.data.messageList)
             if (res.data.isCompleted) {
               context.state.isCompleted = true
-              wx.showToast({
-                title: '更新成功',
-                icon: 'none',
-                duration: 1500
-              })
             }
             context.state.isLoading = false
           }).catch(err => {
@@ -167,6 +168,28 @@ const conversationModules = {
           duration: 1500
         })
       }
+    },
+    checkoutConversation (context, conversationID) {
+      context.commit('resetCurrentConversation')
+      wx.$app.setMessageRead({ conversationID })
+      return wx.$app.getConversationProfile(conversationID)
+        .then(({ data: { conversation } }) => {
+          context.commit('updateCurrentConversation', conversation)
+          context.dispatch('getMessageList')
+          let name = ''
+          switch (conversation.type) {
+            case TIM.TYPES.CONV_C2C:
+              name = conversation.userProfile.nick || conversation.userProfile.userID
+              break
+            case TIM.TYPES.CONV_GROUP:
+              name = conversation.groupProfile.name || conversation.groupProfile.groupID
+              break
+            default:
+              name = '系统通知'
+          }
+          wx.navigateTo({ url: `../chat/main?toAccount=${name}&type=${conversation.type}` })
+          return Promise.resolve()
+        })
     }
   }
 }

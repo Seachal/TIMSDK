@@ -107,7 +107,48 @@ Web Demo 使用 `Vue` + `Vuex` + `Element-UI` 开发，你可以参考该 Demo �
 
    正确的 `userSig` 签发方式是将 `userSig` 的计算代码集成到您的服务端，并提供相应接口。在需要 `userSig` 时，发起请求获取动态 `userSig`。更多详情请参见 [服务端生成 UserSig](https://cloud.tencent.com/document/product/269/32688#GeneratingdynamicUserSig)。
 
-### Change Log
+### WebIM Demo Change Log
+
+#### 2020/1/14
+
+**Features**
+
+- 支持 C2C 视频通话
+
+**Change**
+
+- 消息发送两分钟后，不展示撤回菜单
+
+#### 2020/1/6
+
+**Features**
+
+- SDK 版本更新，支持消息撤回
+- Web Demo增加消息撤回与重新编辑功能
+- 账号被踢出时，给出原因提醒
+
+#### 2019/12/13
+
+**Features**
+
+- 支持粘贴发送截图
+
+**Change**
+
+- 完善收到新消息时的通知处理
+- 处理完【加群申请】后，将相应的通知删除
+
+#### 2019/11/22
+
+**Features**
+
+- 支持地理位置消息的渲染
+- 支持点击群消息头像查看详细资料
+- 支持我的名片的展示和修改
+
+**Change**
+
+- 优化几处体验问题
 
 #### 2019/11/01
 
@@ -155,3 +196,9 @@ Web Demo 使用 `Vue` + `Vuex` + `Element-UI` 开发，你可以参考该 Demo �
 - 修复预览图片时，图片显示不正确的问题
 - 修复点击群组列表时，群成员列表不更新的问题
 - 解决修改个人资料时，报错的问题
+
+#### 2019/12/19
+
+**Feat**
+
+- 添加trtc视频通话，基础流程跑通

@@ -1,30 +1,30 @@
 
-.container.data-v-e0e82344 {
-  background-color: #f8f8f9;
+.container {
+  background-color: #ededed;
   min-height: 100vh;
 }
-.container .group.data-v-e0e82344 {
+.container .group {
   height: 100rpx;
   background-color: #fff;
   box-sizing: border-box;
-  border-bottom: 2rpx solid #dddee1;
+  border-bottom: 2rpx solid #dbdbdb;
   display: flex;
   padding: 20rpx 40rpx;
 }
-.container .group .avatar.data-v-e0e82344 {
+.container .group .avatar {
   width: 120rpx;
 }
-.container .group .avatar .img.data-v-e0e82344 {
+.container .group .avatar .img {
   width: 60rpx;
   height: 60rpx;
 }
-.name.data-v-e0e82344 {
+.name {
   line-height: 60rpx;
-  width: 50%;
+  width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.type.data-v-e0e82344 {
+.type {
   line-height: 60rpx;
 }

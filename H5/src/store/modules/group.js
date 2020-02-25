@@ -19,6 +19,12 @@ const groupModules = {
     updateCurrentMemberList(state, memberList) {
       state.currentMemberList = [...state.currentMemberList, ...memberList]
     },
+    deleteGroupMemeber(state, userID) {
+      state.currentMemberList = state.currentMemberList.filter((member) => member.userID !== userID)
+    },
+    deleteGroupMemberList(state, userIDList) {
+      state.currentMemberList = state.currentMemberList.filter((member) => !userIDList.includes(member.userID))
+    },
     resetCurrentMemberList(state) {
       state.currentMemberList = []
     },

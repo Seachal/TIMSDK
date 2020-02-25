@@ -1,5 +1,5 @@
 <template>
-<message-bubble :isMine=isMine>
+<message-bubble :isMine=isMine :message=message>
   <div class="face-element-wrapper">
     <img :src="url"/>
   </div>
@@ -15,6 +15,10 @@ export default {
       type: Object,
       required: true
     },
+    message: {
+      type: Object,
+      required: true
+    },
     isMine: {
       type: Boolean
     }
@@ -24,7 +28,13 @@ export default {
   },
   computed:{
     url() {
-      return `https://imgcache.qq.com/open/qcloud/tim/assets/face-elem/${this.payload.data}.png`
+      let name = ''
+      if (this.payload.data.indexOf('@2x') > 0) {
+        name = this.payload.data
+      } else {
+        name = this.payload.data + '@2x'
+      }
+      return `https://imgcache.qq.com/open/qcloud/tim/assets/face-elem/${name}.png`
     }
   }
 }

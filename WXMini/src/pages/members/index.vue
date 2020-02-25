@@ -14,7 +14,7 @@
         </i-col>
         <i-col span="3">
           <div class="avatar">
-            <i-avatar :src="item.avatar || '/static/images/header.png'"/>
+            <i-avatar :src="item.avatar || '/static/images/avatar.png'"/>
           </div>
         </i-col>
         <i-col span="7">
@@ -65,7 +65,7 @@ export default {
   computed: {
     ...mapState({
       currentGroupProfile: state => {
-        return state.group.currentGroupProfile
+        return state.conversation.currentConversation.groupProfile
       },
       currentGroupMemberList: state => {
         return state.group.currentGroupMemberList
@@ -79,7 +79,10 @@ export default {
     }
   },
   onReachBottom () {
-    this.getGroupMemberList()
+    // 若群成员列表未拉完，则触底时拉下一页
+    if (this.currentGroupMemberList.length !== this.currentGroupProfile.memberNum) {
+      this.getGroupMemberList()
+    }
   },
   methods: {
     getGroupMemberList () {
@@ -91,7 +94,6 @@ export default {
         userID: this.member.userID,
         muteTime: Number(this.muteTime)
       }).then((res) => {
-        this.$store.commit('updateCurrentGroupProfile', res.data.group)
         this.$store.commit('showToast', {
           title: '设置禁言成功'
         })
@@ -119,8 +121,6 @@ export default {
         groupID: this.currentGroupProfile.groupID,
         reason: '踢出群',
         userIDList: [item.userID]
-      }).then(res => {
-        this.$store.commit('updateCurrentGroupProfile', res.data.group)
       })
     },
     mute (item) {
@@ -159,7 +159,7 @@ export default {
 
 <style lang='stylus' scoped>
 .search
-  background-color #E7E9EA
+  background-color $background
   padding 8px 8px 8px 8px
 .input
   text-align center

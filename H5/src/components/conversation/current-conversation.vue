@@ -30,6 +30,8 @@
     <div class="profile" v-if="showConversationProfile" >
       <conversation-profile/>
     </div>
+    <!-- 群成员资料组件 -->
+    <member-profile-card />
   </div>
 </template>
 
@@ -38,12 +40,14 @@ import { mapGetters, mapState } from 'vuex'
 import MessageSendBox from '../message/message-send-box'
 import MessageItem from '../message/message-item'
 import ConversationProfile from './conversation-profile.vue'
+import MemberProfileCard from '../group/member-profile-card'
 export default {
   name: 'CurrentConversation',
   components: {
     MessageSendBox,
     MessageItem,
-    ConversationProfile
+    ConversationProfile,
+    MemberProfileCard
   },
   data() {
     return {
@@ -56,10 +60,11 @@ export default {
   computed: {
     ...mapState({
       currentConversation: state => state.conversation.currentConversation,
+      currentUnreadCount: state => state.conversation.currentConversation.unreadCount,
       currentMessageList: state => state.conversation.currentMessageList,
       isCompleted: state => state.conversation.isCompleted
     }),
-    ...mapGetters(['toAccount']),
+    ...mapGetters(['toAccount', 'hidden']),
     // 是否显示当前会话组件
     showCurrentConversation() {
       return !!this.currentConversation.conversationID
@@ -93,6 +98,18 @@ export default {
     if (this.currentConversation.conversationID === '@TIM#SYSTEM' || 
         typeof this.currentConversation.conversationID === 'undefined') {
       this.showConversationProfile = false
+    }
+  },
+  watch: {
+    currentUnreadCount(next) {
+      if (!this.hidden && next > 0) {
+        this.tim.setMessageRead({ conversationID: this.currentConversation.conversationID })
+      }
+    },
+    hidden(next) {
+      if (!next && this.currentUnreadCount > 0) {
+        this.tim.setMessageRead({ conversationID: this.currentConversation.conversationID })
+      }
     }
   },
   methods: {

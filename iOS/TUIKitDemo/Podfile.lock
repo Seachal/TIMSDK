@@ -14,62 +14,55 @@ PODS:
   - AFNetworking/Serialization (3.2.1)
   - AFNetworking/UIKit (3.2.1):
     - AFNetworking/NSURLSession
-  - FBRetainCycleDetector (0.1.4)
   - ISVImageScrollView (0.1.2)
-  - MBProgressHUD (1.1.0)
-  - MLeaksFinder (1.0.0):
-    - FBRetainCycleDetector
+  - MBProgressHUD (1.2.0)
   - MMLayout (0.2.0)
   - ReactiveObjC (3.1.1)
-  - SDWebImage (5.2.3):
-    - SDWebImage/Core (= 5.2.3)
-  - SDWebImage/Core (5.2.3)
+  - SDWebImage (5.5.2):
+    - SDWebImage/Core (= 5.5.2)
+  - SDWebImage/Core (5.5.2)
   - Toast (4.0.0)
-  - TXIMSDK_iOS (4.5.111)
-  - TXIMSDK_TUIKit_iOS (4.5.111):
-    - ISVImageScrollView
-    - MMLayout
-    - ReactiveObjC
-    - SDWebImage
-    - Toast
+  - TXIMSDK_iOS (4.6.101)
+  - TXIMSDK_TUIKit_iOS (4.6.100):
+    - ISVImageScrollView (= 0.1.2)
+    - MMLayout (= 0.2.0)
+    - ReactiveObjC (= 3.1.1)
+    - SDWebImage (= 5.5.2)
+    - Toast (= 4.0.0)
     - TXIMSDK_iOS
+  - TXLiteAVSDK_TRTC (6.9.8341)
 
 DEPENDENCIES:
   - AFNetworking
   - MBProgressHUD
-  - MLeaksFinder
-  - MMLayout
-  - ReactiveObjC
-  - SDWebImage
   - TXIMSDK_TUIKit_iOS
+  - TXLiteAVSDK_TRTC
 
 SPEC REPOS:
-  https://github.com/cocoapods/specs.git:
+  https://github.com/CocoaPods/Specs.git:
     - AFNetworking
-    - FBRetainCycleDetector
     - ISVImageScrollView
     - MBProgressHUD
-    - MLeaksFinder
     - MMLayout
     - ReactiveObjC
     - SDWebImage
     - Toast
     - TXIMSDK_iOS
     - TXIMSDK_TUIKit_iOS
+    - TXLiteAVSDK_TRTC
 
 SPEC CHECKSUMS:
   AFNetworking: b6f891fdfaed196b46c7a83cf209e09697b94057
-  FBRetainCycleDetector: 46f8179bbb1c587deee3ea838a1a3ee02acf5015
   ISVImageScrollView: ba511d12a1661b40feb8921309c0854bf93ec749
-  MBProgressHUD: e7baa36a220447d8aeb12769bf0585582f3866d9
-  MLeaksFinder: 8c435bd2f6d070af18cff082b503b21adc130fc0
+  MBProgressHUD: 3ee5efcc380f6a79a7cc9b363dd669c5e1ae7406
   MMLayout: 3fb59d58eeb8656c64e61d550fb0088e10666c11
   ReactiveObjC: 011caa393aa0383245f2dcf9bf02e86b80b36040
-  SDWebImage: 46a7f73228f84ce80990c786e4372cf4db5875ce
+  SDWebImage: 4d5c027c935438f341ed33dbac53ff9f479922ca
   Toast: 91b396c56ee72a5790816f40d3a94dd357abc196
-  TXIMSDK_iOS: 5c952428d5a44f3c35f4fa5d37cf4aaec8f190e6
-  TXIMSDK_TUIKit_iOS: 048d7602c061c6f17f2e3727a0fb3f157cee314b
+  TXIMSDK_iOS: f080472d4c10cb2b0bc58f86f340f1e8a49d34ad
+  TXIMSDK_TUIKit_iOS: 7c5a6556929b590e3d2cfb85a865a3c5b28f4d87
+  TXLiteAVSDK_TRTC: 0d23d1ff11bfed12e6ed2ea48eb013459018e054
 
-PODFILE CHECKSUM: a136670c9c25694a02df9f7f48560f22fc3b2496
+PODFILE CHECKSUM: e018a0260749c0ea2e4aa9377cee378860ae7eb8
 
-COCOAPODS: 1.7.5
+COCOAPODS: 1.8.4

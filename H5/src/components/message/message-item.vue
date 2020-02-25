@@ -17,21 +17,25 @@
             v-if="message.type === TIM.TYPES.MSG_TEXT"
             :isMine="isMine"
             :payload="message.payload"
+            :message="message"
           />
           <image-element
             v-else-if="message.type === TIM.TYPES.MSG_IMAGE"
             :isMine="isMine"
             :payload="message.payload"
+            :message="message"
           />
           <file-element
             v-else-if="message.type === TIM.TYPES.MSG_FILE"
             :isMine="isMine"
             :payload="message.payload"
+            :message="message"
           />
           <sound-element
             v-else-if="message.type === TIM.TYPES.MSG_SOUND"
             :isMine="isMine"
             :payload="message.payload"
+            :message="message"
           />
           <group-tip-element
             v-else-if="message.type===TIM.TYPES.MSG_GRP_TIP"
@@ -46,16 +50,25 @@
             v-else-if="message.type === TIM.TYPES.MSG_CUSTOM"
             :isMine="isMine"
             :payload="message.payload"
+            :message="message"
           />
           <face-element
             v-else-if="message.type === TIM.TYPES.MSG_FACE"
             :isMine="isMine"
             :payload="message.payload"
+            :message="message"
           />
           <video-element
             v-else-if="message.type === TIM.TYPES.MSG_VIDEO"
             :isMine="isMine"
             :payload="message.payload"
+            :message="message"
+          />
+          <geo-element
+            v-else-if="message.type === TIM.TYPES.MSG_GEO"
+            :isMine="isMine"
+            :payload="message.payload"
+            :message="message"
           />
           <span v-else>暂未支持的消息类型：{{message.type}}</span>
         </div>
@@ -72,8 +85,8 @@
       :class="messagePosition"
     >
       <!-- 头像 群组没有获取单个头像的接口，暂时无法显示头像-->
-      <div class="col-1" v-if="showAvatar">
-        <avatar :src="avatar" />
+      <div class="col-1" v-if="showAvatar" >
+        <avatar class="group-member-avatar" :src="avatar" @click.native="showGroupMemberProfile"/>
       </div>
       <div class="col-2">
         <!-- 消息主体 -->
@@ -84,21 +97,25 @@
             v-if="message.type === TIM.TYPES.MSG_TEXT"
             :isMine="isMine"
             :payload="message.payload"
+            :message="message"
           />
           <image-element
             v-else-if="message.type === TIM.TYPES.MSG_IMAGE"
             :isMine="isMine"
             :payload="message.payload"
+            :message="message"
           />
           <file-element
             v-else-if="message.type === TIM.TYPES.MSG_FILE"
             :isMine="isMine"
             :payload="message.payload"
+            :message="message"
           />
           <sound-element
             v-else-if="message.type === TIM.TYPES.MSG_SOUND"
             :isMine="isMine"
             :payload="message.payload"
+            :message="message"
           />
           <group-tip-element
             v-else-if="message.type===TIM.TYPES.MSG_GRP_TIP"
@@ -109,16 +126,25 @@
             v-else-if="message.type === TIM.TYPES.MSG_CUSTOM"
             :isMine="isMine"
             :payload="message.payload"
+            :message="message"
           />
           <face-element
             v-else-if="message.type === TIM.TYPES.MSG_FACE"
             :isMine="isMine"
             :payload="message.payload"
+            :message="message"
           />
           <video-element
             v-else-if="message.type === TIM.TYPES.MSG_VIDEO"
             :isMine="isMine"
             :payload="message.payload"
+            :message="message"
+          />
+          <geo-element
+            v-else-if="message.type === TIM.TYPES.MSG_GEO"
+            :isMine="isMine"
+            :payload="message.payload"
+            :message="message"
           />
           <span v-else>暂未支持的消息类型：{{message.type}}</span>
         </div>
@@ -154,6 +180,8 @@ import VideoElement from './message-elements/video-element.vue'
 import GroupTipElement from './message-elements/group-tip-element.vue'
 import GroupSystemNoticeElement from './message-elements/group-system-notice-element.vue'
 import CustomElement from './message-elements/custom-element.vue'
+import GeoElement from './message-elements/geo-element.vue'
+
 export default {
   name: 'MessageItem',
   props: {
@@ -174,7 +202,8 @@ export default {
     GroupTipElement,
     GroupSystemNoticeElement,
     CustomElement,
-    VideoElement
+    VideoElement,
+    GeoElement,
   },
   data() {
     return {
@@ -188,9 +217,9 @@ export default {
     }),
     // 是否显示头像，群提示消息不显示头像
     showAvatar() {
-      if (this.currentConversation.type === 'C2C') {
+      if (this.currentConversation.type === 'C2C' && !this.message.isRevoked) { // C2C且没有撤回的消息
         return true
-      } else if (this.currentConversation.type === 'GROUP') {
+      } else if (this.currentConversation.type === 'GROUP' && !this.message.isRevoked) { // group且没有撤回的消息
         return this.message.type !== this.TIM.TYPES.MSG_GRP_TIP
       }
       return false
@@ -223,6 +252,9 @@ export default {
       ) {
         return 'position-center'
       }
+      if (this.message.isRevoked) { // 撤回消息
+        return 'position-center'
+      }
       if (this.isMine) {
         return 'position-right'
       } else {
@@ -237,7 +269,24 @@ export default {
       ) {
         return false
       }
+      if (this.message.isRevoked) { // 撤回消息
+        return false
+      }
       return true
+    }
+  },
+  methods: {
+    showGroupMemberProfile(event) {
+      this.tim
+        .getGroupMemberProfile({
+          groupID: this.message.to,
+          userIDList: [this.message.from]
+        })
+        .then(({ data: { memberList } }) => {
+          if (memberList[0]) {
+            this.$bus.$emit('showMemberProfile', { event, member: memberList[0] })
+          }
+        })
     }
   }
 }
@@ -246,6 +295,7 @@ export default {
 <style lang="stylus" scoped>
 .message-wrapper {
   margin: 20px 0;
+
   .content-wrapper {
     display: flex;
     align-items: center;
@@ -262,6 +312,10 @@ export default {
       border-radius: 50%;
       box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.1);
     }
+  }
+
+  .group-member-avatar {
+    cursor: pointer;
   }
 
   .col-2 {
