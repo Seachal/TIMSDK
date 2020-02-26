@@ -36,7 +36,7 @@ public class ChatLayoutHelper {
         mContext = context;
     }
 
-    public void customizeChatLayout(final ChatLayout layout) {
+    public static  void customizeChatLayout(final ChatLayout layout) {
         CustomAVCallUIController.getInstance().setUISender(layout);
 
 //        //====== NoticeLayout使用范例 ======//
@@ -221,7 +221,7 @@ public class ChatLayoutHelper {
 
     }
 
-    public class CustomMessageDraw implements IOnCustomMessageDrawListener {
+    public static class CustomMessageDraw implements IOnCustomMessageDrawListener {
 
         /**
          * 自定义消息渲染时，会调用该方法，本方法实现了自定义消息的创建，以及交互逻辑

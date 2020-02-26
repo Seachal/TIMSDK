@@ -51,7 +51,7 @@ public class ChatFragment extends BaseFragment {
         mChatLayout.initDefault();
 
         // TODO 通过api设置ChatLayout各种属性的样例
-        ChatLayoutHelper.customizeChatLayout(getActivity(), mChatLayout);
+        ChatLayoutHelper.customizeChatLayout( mChatLayout);
 
         /*
          * 需要聊天的基本信息
