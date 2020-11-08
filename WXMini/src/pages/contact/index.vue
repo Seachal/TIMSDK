@@ -25,7 +25,6 @@
 
 <script>
 import { pinyin } from '../../utils/index'
-import { mapState } from 'vuex'
 
 export default {
   data () {
@@ -37,11 +36,6 @@ export default {
       result: {},
       scrollTop: 0
     }
-  },
-  computed: {
-    ...mapState({
-      allConversation: state => state.conversation.allConversation
-    })
   },
   onPageScroll (event) {
     this.scrollTop = event.scrollTop
@@ -74,10 +68,9 @@ export default {
       wx.$app.getFriendList({
         fromAccount: this.$store.state.user.userProfile.to
       }).then(res => {
-        const C2CUserList = this.allConversation.filter(({ type }) => type === wx.TIM.TYPES.CONV_C2C)
-          .map(({ userProfile }) => ({ userID: userProfile.userID, profile: userProfile }))
-        const tempList = [...res.data, ...C2CUserList]
-        const groupedFriends = this.groupingFriendList(tempList)
+        const tempMap = new Map()
+        res.data.forEach(friend => tempMap.set(friend.userID, friend))
+        const groupedFriends = this.groupingFriendList([...tempMap.values()])
         this.groupedFriends = groupedFriends
         this.indexList = groupedFriends.map(item => item.key)
       })

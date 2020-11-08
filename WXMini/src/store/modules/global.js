@@ -1,11 +1,13 @@
 const globalModules = {
   state: {
     isSdkReady: false,
-    isCalling: false
+    isCalling: false,
+    rtcConfig: {}
   },
   getters: {
     isSdkReady: state => state.isSdkReady,
-    isCalling: state => state.isCalling
+    isCalling: state => state.isCalling,
+    rtcConfig: state => state.rtcConfig
   },
   mutations: {
     showToast (state, payload) {
@@ -20,6 +22,9 @@ const globalModules = {
     },
     setCalling (state, payload) {
       state.isCalling = payload
+    },
+    setRtcConfig (state, payload) {
+      state.rtcConfig = payload
     }
   },
   actions: {

@@ -1,13 +1,21 @@
 package com.tencent.qcloud.tim.uikit.modules.chat.layout.message.holder;
 
 import android.text.Html;
+import android.text.TextUtils;
+import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.tencent.qcloud.tim.uikit.R;
 import com.tencent.qcloud.tim.uikit.modules.message.MessageInfo;
+import com.tencent.qcloud.tim.uikit.modules.message.MessageInfoUtil;
+import com.tencent.qcloud.tim.uikit.utils.ScreenUtil;
 import com.tencent.qcloud.tim.uikit.utils.TUIKitConstants;
+
+import it.sephiroth.android.library.easing.Linear;
 
 public class MessageCustomHolder extends MessageContentHolder implements ICustomMessageViewGroup {
 
@@ -39,8 +47,24 @@ public class MessageCustomHolder extends MessageContentHolder implements ICustom
 
     @Override
     public void layoutVariableViews(MessageInfo msg, int position) {
+
+        // 因为recycleview的复用性，可能该holder回收后继续被custom类型的item复用
+        // 但是因为addMessageContentView破坏了msgContentFrame的view结构，所以会造成items的显示错乱。
+        // 这里我们重新添加一下msgBodyText
+        msgContentFrame.removeAllViews();
+        if (msgBodyText.getParent() != null) {
+            ((ViewGroup)msgBodyText.getParent()).removeView(msgBodyText);
+        }
+        msgContentFrame.addView(msgBodyText);
         msgBodyText.setVisibility(View.VISIBLE);
-        msgBodyText.setText(Html.fromHtml(TUIKitConstants.covert2HTMLString("[不支持的自定义消息]")));
+
+        if (msg.getExtra() != null) {
+            if (TextUtils.equals("[自定义消息]", msg.getExtra().toString())) {
+                msgBodyText.setText(Html.fromHtml(TUIKitConstants.covert2HTMLString("[不支持的自定义消息]")));
+            } else {
+                msgBodyText.setText(msg.getExtra().toString());
+            }
+        }
         if (properties.getChatContextFontSize() != 0) {
             msgBodyText.setTextSize(properties.getChatContextFontSize());
         }
@@ -52,6 +76,24 @@ public class MessageCustomHolder extends MessageContentHolder implements ICustom
             if (properties.getLeftChatContentFontColor() != 0) {
                 msgBodyText.setTextColor(properties.getLeftChatContentFontColor());
             }
+        }
+        boolean live = MessageInfoUtil.isLive(msg);
+        if (live) {
+            ViewGroup.LayoutParams msgContentLinearParams = msgContentLinear.getLayoutParams();
+            msgContentLinearParams.width = ViewGroup.LayoutParams.WRAP_CONTENT;
+            msgContentLinear.setLayoutParams(msgContentLinearParams);
+
+            LinearLayout.LayoutParams msgContentFrameParams = (LinearLayout.LayoutParams) msgContentFrame.getLayoutParams();
+            msgContentFrameParams.width = ScreenUtil.dip2px(220);
+            msgContentFrameParams.gravity = Gravity.RIGHT | Gravity.END;
+            msgContentFrame.setLayoutParams(msgContentFrameParams);
+            if (msg.isSelf()) {
+                msgContentFrame.setBackgroundResource(R.drawable.chat_right_live_group_bg);
+            } else {
+                msgContentFrame.setBackgroundResource(R.drawable.chat_left_live_group_bg);
+            }
+            // 群直播消息不显示已读状态
+            isReadText.setVisibility(View.INVISIBLE);
         }
     }
 

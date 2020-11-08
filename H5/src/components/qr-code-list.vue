@@ -17,8 +17,14 @@
         <div class="text">小程序</div>
       </div>
       <div class="qr-code-item">
-        <img src="https://main.qcloudimg.com/raw/03ed2f2cb4101d97e234c911b060717a.png" />
-        <div class="text">iOS(密码：123)</div>
+        <img
+                src="https://upload-dianshi-1255598498.file.myqcloud.com/gh_47854f5a3fb8_258-b007e3dc9f40667fdcfcac4c4476c7ce276c7d0e.jpg"
+        />
+        <div class="text">直播电商解决方案</div>
+      </div>
+      <div class="qr-code-item">
+        <img src="https://main.qcloudimg.com/raw/73daa40cef967ba415cdba2cabf4bdc7.png" />
+        <div class="text">iOS</div>
       </div>
       <div class="qr-code-item">
         <img
@@ -48,12 +54,11 @@ export default {
 
 <style scoped>
 .qr-code-list-wrapper {
-  width: 400px;
-  margin-top: 60px;
+  /*width: 400px;*/
 }
 .header {
   color: #fff;
-  margin-bottom: 16px;
+  margin: 16px 0;
 }
 .link {
   color: #38c9ff;
@@ -63,7 +68,12 @@ export default {
   display: flex;
   justify-content: space-between;
 }
+.qr-code-item {
+ margin-right: 20px;
+}
+
 .qr-code-item .text {
+  font-size: 15px;
   text-align: center;
   color: #fff;
 }

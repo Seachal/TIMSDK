@@ -1,9 +1,12 @@
 package com.tencent.qcloud.tim.uikit.component;
 
 import android.content.Context;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
+
+import com.tencent.qcloud.tim.uikit.utils.TUIKitLog;
+
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * https://stackoverflow.com/questions/30458640/recyclerview-java-lang-indexoutofboundsexception-inconsistency-detected-inval
@@ -29,7 +32,7 @@ public class CustomLinearLayoutManager extends LinearLayoutManager {
             //try catch一下
             super.onLayoutChildren(recycler, state);
         } catch (IndexOutOfBoundsException e) {
-            e.printStackTrace();
+            TUIKitLog.w("CustomLinearLayoutManager", e.getLocalizedMessage());
         }
 
     }

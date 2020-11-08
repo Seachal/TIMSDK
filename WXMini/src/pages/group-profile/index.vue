@@ -38,12 +38,17 @@
     </i-cell-group>
     <!-- 群组相关操作 -->
     <i-cell-group i-class="group-action">
+      <i-cell title="全体禁言">
+        <switch slot="footer" color="#006fff" :disabled="!isAdminOrOwner" @change="handleMuteSwitch"  @click ="handleClick"/>
+      </i-cell>
+    </i-cell-group>
+    <i-cell-group i-class="group-action">
       <i-cell i-class="quit" :title="quitText" is-link @click="handleQuit" />
     </i-cell-group>
 
     <!-- 添加群成员 Modal 窗 -->
-    <i-modal title="添加群成员" :visible="addMemberModalVisible" @ok="handleOk" @cancel="addMemberModalVisible = false">
-      <input class="user-id-input" :focus="addMemberModalVisible" v-model="userID" placeholder="请输入 userID"/>
+    <i-modal :i-class="inputFocus ? 'add-member-modal-on-focus add-member-modal' : 'add-member-modal'" title="添加群成员" :visible="addMemberModalVisible" @ok="handleOk" @cancel="addMemberModalVisible = false">
+      <input v-show="addMemberModalVisible" class="user-id-input" :focus="addMemberModalVisible" v-model="userID" placeholder="请输入 userID" @focus="inputFocus = true" @blur="inputFocus = false"/>
     </i-modal>
   </div>
 </template>
@@ -54,6 +59,7 @@ export default {
   data () {
     return {
       addMemberModalVisible: false,
+      inputFocus: false,
       userID: ''
     }
   },
@@ -73,18 +79,18 @@ export default {
       groupProfile: state => state.conversation.currentConversation.groupProfile,
       memberList: state => state.group.currentGroupMemberList.slice(0, 12)
     }),
-    // 私有群才能添加群成员
+    // 好友工作群才能添加群成员
     addMemberButtonVisible () {
       if (this.groupProfile) {
-        return this.groupProfile.type === 'Private'
+        return this.groupProfile.type === wx.TIM.TYPES.GRP_WORK
       }
       return false
     },
     quitText () {
       if (this.groupProfile &&
-        this.groupProfile.type !== wx.TIM.TYPES.GRP_PRIVATE &&
+        this.groupProfile.type !== wx.TIM.TYPES.GRP_WORK &&
         this.groupProfile.selfInfo &&
-        this.groupProfile.selfInfo.role === 'Owner'
+        this.groupProfile.selfInfo.role === wx.TIM.TYPES.GRP_MBR_ROLE_OWNER
       ) {
         return '退出并解散群聊'
       }
@@ -92,7 +98,7 @@ export default {
     },
     isAdminOrOwner () {
       if (this.groupProfile && this.groupProfile.selfInfo) {
-        return this.groupProfile.selfInfo.role !== 'Member'
+        return this.groupProfile.selfInfo.role !== wx.TIM.TYPES.GRP_MBR_ROLE_MEMBER
       }
       return false
     },
@@ -100,8 +106,8 @@ export default {
       if (!this.groupProfile || !this.groupProfile.selfInfo) {
         return false
       }
-      // 任何成员都可修改私有群的群资料
-      if (this.groupProfile.type === this.TIM.TYPES.GRP_PRIVATE) {
+      // 任何成员都可修改好友工作群的群资料
+      if (this.groupProfile.type === wx.TIM.TYPES.GRP_WORK) {
         return true
       }
       // 其他类型的群组只有管理员以上身份可以修改
@@ -125,7 +131,7 @@ export default {
         success: (res) => {
           if (res.confirm) {
             // 解散群聊
-            if (this.groupProfile.type !== wx.TIM.TYPES.GRP_PRIVATE && this.groupProfile.selfInfo.role === 'Owner') {
+            if (this.groupProfile.type !== wx.TIM.TYPES.GRP_WORK && this.groupProfile.selfInfo.role === wx.TIM.TYPES.GRP_MBR_ROLE_OWNER) {
               wx.$app.dismissGroup(this.groupProfile.groupID).then(() => {
                 wx.showToast({ title: '解散成功', duration: 800 })
                 setTimeout(() => {
@@ -148,6 +154,38 @@ export default {
           }
         }
       })
+    },
+    handleClick () {
+      if (!this.isAdminOrOwner) {
+        wx.showToast({ title: '普通群成员不能设置全体禁言', duration: 1500, icon: 'none' })
+      }
+    },
+    handleMuteSwitch (event) {
+      if (this.isAdminOrOwner) {
+        let muteAllMembers = event.mp.detail.value
+        wx.$app.updateGroupProfile({
+          muteAllMembers: muteAllMembers,
+          groupID: this.groupProfile.groupID
+        }).then(imResponse => {
+          const muteAllMembers = imResponse.data.group.muteAllMembers
+          if (muteAllMembers) {
+            this.$store.commit('showToast', {
+              title: '全体禁言已开启',
+              con: 'none',
+              duration: 1500
+            })
+          } else {
+            this.$store.commit('showToast', {
+              title: '全体禁言已取消',
+              icon: 'none',
+              duration: 1500
+            })
+          }
+        })
+          .catch(error => {
+            wx.showToast({ title: error.message, duration: 800, icon: 'none' })
+          })
+      }
     },
     handleOk () {
       if (this.userID === '') {
@@ -177,6 +215,8 @@ export default {
 </script>
 
 <style lang="stylus">
+.add-member-modal-on-focus
+  transform translateY(-70px)
 .group-detail-wrapper
   height 100vh
   background-color $background
@@ -214,7 +254,7 @@ export default {
   margin 12px auto
   width 80%
   padding 0 12px
-  border-bottom 1px solid $dark-background
+  border-bottom 1px solid $light-background
 .cell-value
   color $dark-background !important
 </style>

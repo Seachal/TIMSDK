@@ -1,28 +1,26 @@
 package com.tencent.qcloud.tim.uikit.modules.contact;
 
 import android.net.Uri;
-import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.tencent.imsdk.TIMFriendshipManager;
-import com.tencent.imsdk.TIMValueCallBack;
-import com.tencent.imsdk.friendship.TIMFriendPendencyRequest;
-import com.tencent.imsdk.friendship.TIMFriendPendencyResponse;
-import com.tencent.imsdk.friendship.TIMPendencyType;
+import com.tencent.imsdk.v2.V2TIMFriendApplicationResult;
+import com.tencent.imsdk.v2.V2TIMManager;
+import com.tencent.imsdk.v2.V2TIMValueCallback;
 import com.tencent.qcloud.tim.uikit.R;
 import com.tencent.qcloud.tim.uikit.TUIKit;
 import com.tencent.qcloud.tim.uikit.component.picture.imageEngine.impl.GlideEngine;
 import com.tencent.qcloud.tim.uikit.utils.ToastUtil;
 
 import java.util.List;
+
+import androidx.recyclerview.widget.RecyclerView;
 
 
 public class ContactAdapter extends RecyclerView.Adapter<ContactAdapter.ViewHolder> {
@@ -72,12 +70,6 @@ public class ContactAdapter extends RecyclerView.Adapter<ContactAdapter.ViewHold
         if (mOnSelectChangedListener != null) {
             holder.ccSelect.setVisibility(View.VISIBLE);
             holder.ccSelect.setChecked(contactBean.isSelected());
-            holder.ccSelect.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                @Override
-                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    mOnSelectChangedListener.onSelectChanged(getItem(position), isChecked);
-                }
-            });
         }
 
         holder.content.setOnClickListener(new View.OnClickListener() {
@@ -87,6 +79,9 @@ public class ContactAdapter extends RecyclerView.Adapter<ContactAdapter.ViewHold
                     return;
                 }
                 holder.ccSelect.setChecked(!holder.ccSelect.isChecked());
+                if (mOnSelectChangedListener != null) {
+                    mOnSelectChangedListener.onSelectChanged(getItem(position), holder.ccSelect.isChecked());
+                }
                 contactBean.setSelected(holder.ccSelect.isChecked());
                 if (mOnClickListener != null) {
                     mOnClickListener.onItemClick(position, contactBean);
@@ -102,18 +97,17 @@ public class ContactAdapter extends RecyclerView.Adapter<ContactAdapter.ViewHold
         holder.unreadText.setVisibility(View.GONE);
         if (TextUtils.equals(TUIKit.getAppContext().getResources().getString(R.string.new_friend), contactBean.getId())) {
             holder.avatar.setImageResource(R.drawable.group_new_friend);
-            final TIMFriendPendencyRequest timFriendPendencyRequest = new TIMFriendPendencyRequest();
-            timFriendPendencyRequest.setTimPendencyGetType(TIMPendencyType.TIM_PENDENCY_COME_IN);
-            TIMFriendshipManager.getInstance().getPendencyList(timFriendPendencyRequest, new TIMValueCallBack<TIMFriendPendencyResponse>() {
+
+            V2TIMManager.getFriendshipManager().getFriendApplicationList(new V2TIMValueCallback<V2TIMFriendApplicationResult>() {
                 @Override
-                public void onError(int i, String s) {
-                    ToastUtil.toastShortMessage("Error code = " + i + ", desc = " + s);
+                public void onError(int code, String desc) {
+                    ToastUtil.toastShortMessage("Error code = " + code + ", desc = " + desc);
                 }
 
                 @Override
-                public void onSuccess(TIMFriendPendencyResponse timFriendPendencyResponse) {
-                    if (timFriendPendencyResponse.getItems() != null) {
-                        int pendingRequest = timFriendPendencyResponse.getItems().size();
+                public void onSuccess(V2TIMFriendApplicationResult v2TIMFriendApplicationResult) {
+                    if (v2TIMFriendApplicationResult.getFriendApplicationList() != null) {
+                        int pendingRequest = v2TIMFriendApplicationResult.getFriendApplicationList().size();
                         if (pendingRequest == 0) {
                             holder.unreadText.setVisibility(View.GONE);
                         } else {

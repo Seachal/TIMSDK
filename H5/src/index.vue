@@ -1,7 +1,8 @@
 <template>
   <div class="container">
     <div id="wrapper" v-if="!isLogin" >
-      <login/>
+      <login />
+      <qr-code-list/>
     </div>
     <div
       class="loading"
@@ -41,20 +42,26 @@ import CurrentConversation from './components/conversation/current-conversation'
 import SideBar from './components/layout/side-bar'
 import Login from './components/user/login'
 import ImagePreviewer from './components/message/image-previewer.vue'
+import QrCodeList from './components/qr-code-list'
 import { translateGroupSystemNotice } from './utils/common'
 import CallLayer from './components/message/call-layer'
 import { ACTION } from './utils/trtcCustomMessageMap'
 import MTA from './utils/mta'
 
-
 export default {
   title: 'TIMSDK DEMO',
+  data () {
+    return {
+      loginType: 2 // github 登录只使用默认账号登录
+    }
+  },
   components: {
     Login,
     SideBar,
     CurrentConversation,
     ImagePreviewer,
-    CallLayer
+    CallLayer,
+    QrCodeList
   },
 
   computed: {
@@ -101,8 +108,11 @@ export default {
       this.tim.on(this.TIM.EVENT.CONVERSATION_LIST_UPDATED, this.onUpdateConversationList)
       // 群组列表更新
       this.tim.on(this.TIM.EVENT.GROUP_LIST_UPDATED, this.onUpdateGroupList)
-      // 收到新的群系统通知
-      this.tim.on(this.TIM.EVENT.GROUP_SYSTEM_NOTICE_RECEIVED, this.onReceiveGroupSystemNotice)
+      // 网络监测
+      this.tim.on(this.TIM.EVENT.NET_STATE_CHANGE, this.onNetStateChange)
+      // 已读回执
+      this.tim.on(this.TIM.EVENT.MESSAGE_READ_BY_PEER, this.onMessageReadByPeer)
+
     },
     onReceiveMessage({ data: messageList }) {
       this.handleVideoMessage(messageList)
@@ -117,6 +127,9 @@ export default {
           type: 'error'
         })
       }
+    },
+    onMessageReadByPeer() {
+
     },
     onReadyStateUpdate({ name }) {
       const isSDKReady = name === this.TIM.EVENT.SDK_READY ? true : false
@@ -148,6 +161,21 @@ export default {
         default:
           return ''
       }
+    },
+    checkoutNetState(state) {
+      switch (state) {
+        case this.TIM.TYPES.NET_STATE_CONNECTED:
+          return { message: '已接入网络', type: 'success' }
+        case this.TIM.TYPES.NET_STATE_CONNECTING:
+          return { message: '当前网络不稳定', type: 'warning' }
+        case this.TIM.TYPES.NET_STATE_DISCONNECTED:
+          return { message: '当前网络不可用', type: 'error' }
+        default:
+          return ''
+      }
+    },
+    onNetStateChange(event) {
+      this.$store.commit('showMessage', this.checkoutNetState(event.data.state))
     },
     onKickOut(event) {
       this.$store.commit('showMessage', {
@@ -310,8 +338,8 @@ export default {
       const groupTips = messageList.filter(message => {
         return this.currentConversation.conversationID === message.conversationID &&
           message.type === this.TIM.TYPES.MSG_GRP_TIP &&
-          (message.payload.operationType === this.TIM.TYPES.GRP_TIP_MBR_QUIT || 
-          message.payload.operationType === this.TIM.TYPES.GRP_TIP_MBR_KICKED_OUT) 
+          (message.payload.operationType === this.TIM.TYPES.GRP_TIP_MBR_QUIT ||
+          message.payload.operationType === this.TIM.TYPES.GRP_TIP_MBR_KICKED_OUT)
       })
       // 清理当前会话的群成员列表
       if (groupTips.length > 0) {
@@ -359,7 +387,7 @@ body {
   justify-content: center;
   align-items: center;
   flex-direction: column;
-  padding-top: 100px;
+  padding-top: 60px;
 }
 
 .container

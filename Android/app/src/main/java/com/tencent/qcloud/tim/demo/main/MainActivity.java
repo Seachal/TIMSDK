@@ -1,29 +1,43 @@
 package com.tencent.qcloud.tim.demo.main;
 
-import android.app.Fragment;
+import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
+import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.view.View;
 import android.widget.TextView;
 
-import com.huawei.android.hms.agent.HMSAgent;
-import com.huawei.android.hms.agent.common.handler.ConnectHandler;
-import com.huawei.android.hms.agent.push.handler.GetTokenHandler;
-import com.tencent.imsdk.utils.IMFunc;
+import com.heytap.msp.push.HeytapPushManager;
+import com.huawei.agconnect.config.AGConnectServicesConfig;
+import com.huawei.hms.aaid.HmsInstanceId;
+import com.huawei.hms.common.ApiException;
+import com.tencent.imsdk.v2.V2TIMCallback;
+import com.tencent.imsdk.v2.V2TIMManager;
+import com.tencent.imsdk.v2.V2TIMSignalingInfo;
+import com.tencent.liteav.model.CallModel;
+import com.tencent.liteav.model.TRTCAVCallImpl;
 import com.tencent.qcloud.tim.demo.BaseActivity;
+import com.tencent.qcloud.tim.demo.DemoApplication;
 import com.tencent.qcloud.tim.demo.R;
 import com.tencent.qcloud.tim.demo.contact.ContactFragment;
 import com.tencent.qcloud.tim.demo.conversation.ConversationFragment;
 import com.tencent.qcloud.tim.demo.profile.ProfileFragment;
+import com.tencent.qcloud.tim.demo.scenes.ScenesFragment;
+import com.tencent.qcloud.tim.demo.thirdpush.HUAWEIHmsMessageService;
+import com.tencent.qcloud.tim.demo.thirdpush.OPPOPushImpl;
 import com.tencent.qcloud.tim.demo.thirdpush.ThirdPushTokenMgr;
+import com.tencent.qcloud.tim.demo.utils.BrandUtil;
+import com.tencent.qcloud.tim.demo.utils.Constants;
 import com.tencent.qcloud.tim.demo.utils.DemoLog;
+import com.tencent.qcloud.tim.demo.utils.PrivateConstants;
 import com.tencent.qcloud.tim.uikit.modules.chat.GroupChatManagerKit;
 import com.tencent.qcloud.tim.uikit.modules.conversation.ConversationManagerKit;
 import com.tencent.qcloud.tim.uikit.utils.FileUtil;
 import com.vivo.push.IPushActionListener;
 import com.vivo.push.PushClient;
 
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
 
 public class MainActivity extends BaseActivity implements ConversationManagerKit.MessageUnreadWatcher {
 
@@ -32,8 +46,11 @@ public class MainActivity extends BaseActivity implements ConversationManagerKit
     private TextView mConversationBtn;
     private TextView mContactBtn;
     private TextView mProfileSelfBtn;
+    private TextView mScenesBtn;
     private TextView mMsgUnread;
     private View mLastTab;
+
+    private CallModel mCallModel;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -42,24 +59,38 @@ public class MainActivity extends BaseActivity implements ConversationManagerKit
         prepareThirdPushToken();
     }
 
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        DemoLog.i(TAG, "onNewIntent");
+        mCallModel = (CallModel) intent.getSerializableExtra(Constants.CHAT_INFO);
+    }
+
     private void prepareThirdPushToken() {
         ThirdPushTokenMgr.getInstance().setPushTokenToTIM();
 
-        if (ThirdPushTokenMgr.USER_GOOGLE_FCM) {
-            return;
-        }
-        if (IMFunc.isBrandHuawei()) {
+        if (BrandUtil.isBrandHuawei()) {
             // 华为离线推送
-            HMSAgent.connect(this, new ConnectHandler() {
+            new Thread() {
                 @Override
-                public void onConnect(int rst) {
-                    DemoLog.i(TAG, "huawei push HMS connect end:" + rst);
+                public void run() {
+                    try {
+                        // read from agconnect-services.json
+                        String appId = AGConnectServicesConfig.fromContext(MainActivity.this).getString("client/app_id");
+                        String token = HmsInstanceId.getInstance(MainActivity.this).getToken(appId, "HCM");
+                        DemoLog.i(TAG, "huawei get token:" + token);
+                        if(!TextUtils.isEmpty(token)) {
+                            ThirdPushTokenMgr.getInstance().setThirdPushToken(token);
+                            ThirdPushTokenMgr.getInstance().setPushTokenToTIM();
+                        }
+                    } catch (ApiException e) {
+                        DemoLog.e(TAG, "huawei get token failed, " + e);
+                    }
                 }
-            });
-            getHuaWeiPushToken();
-        }
-        if (IMFunc.isBrandVivo()) {
+            }.start();
+        } else if (BrandUtil.isBrandVivo()) {
             // vivo离线推送
+            DemoLog.i(TAG, "vivo support push: " + PushClient.getInstance(getApplicationContext()).isSupport());
             PushClient.getInstance(getApplicationContext()).turnOnPush(new IPushActionListener() {
                 @Override
                 public void onStateChanged(int state) {
@@ -74,6 +105,13 @@ public class MainActivity extends BaseActivity implements ConversationManagerKit
                     }
                 }
             });
+        } else if (HeytapPushManager.isSupportPush()) {
+            // oppo离线推送
+            OPPOPushImpl oppo = new OPPOPushImpl();
+            oppo.createNotificationChannel(this);
+            HeytapPushManager.register(this, PrivateConstants.OPPO_PUSH_APPKEY, PrivateConstants.OPPO_PUSH_APPSECRET, oppo);
+        } else if (BrandUtil.isGoogleServiceSupport()) {
+            // 谷歌推送
         }
     }
 
@@ -82,8 +120,9 @@ public class MainActivity extends BaseActivity implements ConversationManagerKit
         mConversationBtn = findViewById(R.id.conversation);
         mContactBtn = findViewById(R.id.contact);
         mProfileSelfBtn = findViewById(R.id.mine);
+        mScenesBtn = findViewById(R.id.scenes);
         mMsgUnread = findViewById(R.id.msg_total_unread);
-        getFragmentManager().beginTransaction().replace(R.id.empty_view, new ConversationFragment()).commitAllowingStateLoss();
+        getSupportFragmentManager().beginTransaction().replace(R.id.empty_view, new ConversationFragment()).commitAllowingStateLoss();
         FileUtil.initPath(); // 从application移入到这里，原因在于首次装上app，需要获取一系列权限，如创建文件夹，图片下载需要指定创建好的文件目录，否则会下载本地失败，聊天页面从而获取不到图片、表情
 
         // 未读消息监视器
@@ -119,6 +158,11 @@ public class MainActivity extends BaseActivity implements ConversationManagerKit
                 mContactBtn.setTextColor(getResources().getColor(R.color.tab_text_selected_color));
                 mContactBtn.setCompoundDrawablesWithIntrinsicBounds(null, getResources().getDrawable(R.drawable.contact_selected), null, null);
                 break;
+            case R.id.scenes_btn_group:
+                current = new ScenesFragment();
+                mScenesBtn.setTextColor(getResources().getColor(R.color.tab_text_selected_color));
+                mScenesBtn.setCompoundDrawablesWithIntrinsicBounds(null, getResources().getDrawable(R.drawable.live_selected), null, null);
+                break;
             case R.id.myself_btn_group:
                 current = new ProfileFragment();
                 mProfileSelfBtn.setTextColor(getResources().getColor(R.color.tab_text_selected_color));
@@ -129,8 +173,8 @@ public class MainActivity extends BaseActivity implements ConversationManagerKit
         }
 
         if (current != null && !current.isAdded()) {
-            getFragmentManager().beginTransaction().replace(R.id.empty_view, current).commitAllowingStateLoss();
-            getFragmentManager().executePendingTransactions();
+            getSupportFragmentManager().beginTransaction().replace(R.id.empty_view, current).commitAllowingStateLoss();
+            getSupportFragmentManager().executePendingTransactions();
         } else {
             DemoLog.w(TAG, "fragment added!");
         }
@@ -143,6 +187,8 @@ public class MainActivity extends BaseActivity implements ConversationManagerKit
         mContactBtn.setCompoundDrawablesWithIntrinsicBounds(null, getResources().getDrawable(R.drawable.contact_normal), null, null);
         mProfileSelfBtn.setTextColor(getResources().getColor(R.color.tab_text_normal_color));
         mProfileSelfBtn.setCompoundDrawablesWithIntrinsicBounds(null, getResources().getDrawable(R.drawable.myself_normal), null, null);
+        mScenesBtn.setTextColor(getResources().getColor(R.color.tab_text_normal_color));
+        mScenesBtn.setCompoundDrawablesWithIntrinsicBounds(null, getResources().getDrawable(R.drawable.live_normal), null, null);
     }
 
 
@@ -158,6 +204,8 @@ public class MainActivity extends BaseActivity implements ConversationManagerKit
             unreadStr = "99+";
         }
         mMsgUnread.setText(unreadStr);
+        // 华为离线推送角标
+        HUAWEIHmsMessageService.updateBadge(this, count);
     }
 
     @Override
@@ -165,8 +213,7 @@ public class MainActivity extends BaseActivity implements ConversationManagerKit
         if (keyCode == KeyEvent.KEYCODE_BACK) {
             finish();
         }
-        return true;
-
+        return super.onKeyDown(keyCode, event);
     }
 
     @Override
@@ -185,6 +232,19 @@ public class MainActivity extends BaseActivity implements ConversationManagerKit
     protected void onResume() {
         DemoLog.i(TAG, "onResume");
         super.onResume();
+        if (mCallModel != null) {
+            TRTCAVCallImpl impl = (TRTCAVCallImpl) TRTCAVCallImpl.sharedInstance(DemoApplication.instance());
+            impl.stopCall();
+            final V2TIMSignalingInfo info = new V2TIMSignalingInfo();
+            info.setInviteID(mCallModel.callId);
+            info.setInviteeList(mCallModel.invitedList);
+            info.setGroupID(mCallModel.groupId);
+            info.setInviter(mCallModel.sender);
+            info.setData(mCallModel.data);
+            ((TRTCAVCallImpl)(TRTCAVCallImpl.sharedInstance(DemoApplication.instance()))).processInvite(
+                    info.getInviteID(), info.getInviter(), info.getGroupID(), info.getInviteeList(), info.getData());
+            mCallModel = null;
+        }
     }
 
     @Override
@@ -207,12 +267,4 @@ public class MainActivity extends BaseActivity implements ConversationManagerKit
         super.onDestroy();
     }
 
-    private void getHuaWeiPushToken() {
-        HMSAgent.Push.getToken(new GetTokenHandler() {
-            @Override
-            public void onResult(int rtnCode) {
-                DemoLog.i(TAG, "huawei push get token result code: " + rtnCode);
-            }
-        });
-    }
 }

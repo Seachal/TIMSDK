@@ -1,12 +1,13 @@
 package com.tencent.qcloud.tim.uikit.modules.chat.base;
 
 import android.content.Context;
-import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import androidx.annotation.Nullable;
 
 import com.tencent.qcloud.tim.uikit.R;
 import com.tencent.qcloud.tim.uikit.component.NoticeLayout;
@@ -27,6 +28,7 @@ public abstract class ChatLayoutUI extends LinearLayout implements IChatLayout {
     private InputLayout mInputLayout;
     private NoticeLayout mNoticeLayout;
     private ChatInfo mChatInfo;
+    private TextView mChatAtInfoLayout;
 
     public ChatLayoutUI(Context context) {
         super(context);
@@ -49,11 +51,13 @@ public abstract class ChatLayoutUI extends LinearLayout implements IChatLayout {
         mTitleBar = findViewById(R.id.chat_title_bar);
         mMessageLayout = findViewById(R.id.chat_message_layout);
         mInputLayout = findViewById(R.id.chat_input_layout);
+        mInputLayout.setChatLayout(this);
         mRecordingGroup = findViewById(R.id.voice_recording_view);
         mRecordingIcon = findViewById(R.id.recording_icon);
         mRecordingTips = findViewById(R.id.recording_tips);
         mGroupApplyLayout = findViewById(R.id.chat_group_apply_layout);
         mNoticeLayout = findViewById(R.id.chat_notice_layout);
+        mChatAtInfoLayout = findViewById(R.id.chat_at_text_view);
 
         init();
     }
@@ -83,8 +87,14 @@ public abstract class ChatLayoutUI extends LinearLayout implements IChatLayout {
     }
 
     @Override
+    public TextView getAtInfoLayout() {
+        return mChatAtInfoLayout;
+    }
+
+    @Override
     public void setChatInfo(ChatInfo chatInfo) {
         mChatInfo = chatInfo;
+        mInputLayout.setChatInfo(chatInfo);
         if (chatInfo == null) {
             return;
         }

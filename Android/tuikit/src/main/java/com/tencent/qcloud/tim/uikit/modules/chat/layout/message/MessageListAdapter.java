@@ -1,19 +1,22 @@
 package com.tencent.qcloud.tim.uikit.modules.chat.layout.message;
 
-import android.support.annotation.NonNull;
-import android.support.v7.widget.RecyclerView;
 import android.view.ViewGroup;
 
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.tencent.qcloud.tim.uikit.modules.chat.interfaces.IChatProvider;
+import com.tencent.qcloud.tim.uikit.modules.chat.layout.message.holder.GroupMessageHelper;
 import com.tencent.qcloud.tim.uikit.modules.chat.layout.message.holder.IOnCustomMessageDrawListener;
+import com.tencent.qcloud.tim.uikit.modules.chat.layout.message.holder.IGroupMessageClickListener;
 import com.tencent.qcloud.tim.uikit.modules.chat.layout.message.holder.MessageBaseHolder;
 import com.tencent.qcloud.tim.uikit.modules.chat.layout.message.holder.MessageContentHolder;
 import com.tencent.qcloud.tim.uikit.modules.chat.layout.message.holder.MessageCustomHolder;
 import com.tencent.qcloud.tim.uikit.modules.chat.layout.message.holder.MessageEmptyHolder;
 import com.tencent.qcloud.tim.uikit.modules.chat.layout.message.holder.MessageHeaderHolder;
 import com.tencent.qcloud.tim.uikit.modules.message.MessageInfo;
+import com.tencent.qcloud.tim.uikit.modules.message.MessageInfoUtil;
 import com.tencent.qcloud.tim.uikit.utils.BackgroundTasks;
-import com.tencent.qcloud.tim.uikit.utils.TUIKitLog;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,9 +31,14 @@ public class MessageListAdapter extends RecyclerView.Adapter {
     private List<MessageInfo> mDataSource = new ArrayList<>();
     private MessageLayout.OnItemClickListener mOnItemClickListener;
     private IOnCustomMessageDrawListener mOnCustomMessageDrawListener;
+    private IGroupMessageClickListener mIGroupMessageClickListener;
 
     public void setOnCustomMessageDrawListener(IOnCustomMessageDrawListener listener) {
         mOnCustomMessageDrawListener = listener;
+    }
+
+    public void setIGroupMessageClickListener(IGroupMessageClickListener IGroupMessageClickListener) {
+        mIGroupMessageClickListener = IGroupMessageClickListener;
     }
 
     public MessageLayout.OnItemClickListener getOnItemClickListener() {
@@ -71,7 +79,9 @@ public class MessageListAdapter extends RecyclerView.Adapter {
         // 对于自定义消息，需要在正常布局之后，交给外部调用者重新加载渲染
         if (getItemViewType(position) == MessageInfo.MSG_TYPE_CUSTOM) {
             MessageCustomHolder customHolder = (MessageCustomHolder) holder;
-            if (mOnCustomMessageDrawListener != null) {
+            if (MessageInfoUtil.isLive(msg)) {
+                new GroupMessageHelper(mIGroupMessageClickListener).onDraw(customHolder, msg);
+            } else if (mOnCustomMessageDrawListener != null) {
                 mOnCustomMessageDrawListener.onDraw(customHolder, msg);
             }
         }
@@ -81,6 +91,7 @@ public class MessageListAdapter extends RecyclerView.Adapter {
     public void onAttachedToRecyclerView(@NonNull RecyclerView recyclerView) {
         super.onAttachedToRecyclerView(recyclerView);
         mRecycleView = (MessageLayout) recyclerView;
+        mRecycleView.setItemViewCacheSize(5);
     }
 
     public void showLoading() {

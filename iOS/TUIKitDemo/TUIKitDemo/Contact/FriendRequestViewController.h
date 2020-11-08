@@ -11,12 +11,13 @@
  *  本类依赖于腾讯云 TUIKit和IMSDK 实现
  */
 #import <UIKit/UIKit.h>
-#import "TIMFriendshipManager.h"
+
+@import ImSDK;
 
 NS_ASSUME_NONNULL_BEGIN
 
 @interface FriendRequestViewController : UIViewController
-@property TIMUserProfile *profile;
+@property V2TIMUserFullInfo *profile;
 @end
 
 NS_ASSUME_NONNULL_END

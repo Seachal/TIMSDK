@@ -1,8 +1,10 @@
 package com.tencent.qcloud.tim.uikit.modules.chat.base;
 
-import com.tencent.imsdk.TIMConversationType;
+import com.tencent.imsdk.v2.V2TIMConversation;
+import com.tencent.imsdk.v2.V2TIMGroupAtInfo;
 
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * 聊天信息基本类
@@ -10,9 +12,11 @@ import java.io.Serializable;
 public class ChatInfo implements Serializable {
 
     private String chatName;
-    private TIMConversationType type = TIMConversationType.C2C;
+    private int type = V2TIMConversation.V2TIM_C2C;
     private String id;
     private boolean isTopChat;
+
+    private static List<V2TIMGroupAtInfo> atInfoList;
 
     public ChatInfo() {
 
@@ -41,7 +45,7 @@ public class ChatInfo implements Serializable {
      *
      * @return
      */
-    public TIMConversationType getType() {
+    public int getType() {
         return type;
     }
 
@@ -50,7 +54,7 @@ public class ChatInfo implements Serializable {
      *
      * @param type
      */
-    public void setType(TIMConversationType type) {
+    public void setType(int type) {
         this.type = type;
     }
 
@@ -90,4 +94,11 @@ public class ChatInfo implements Serializable {
         isTopChat = topChat;
     }
 
+    public List<V2TIMGroupAtInfo> getAtInfoList() {
+        return atInfoList;
+    }
+
+    public void setAtInfoList(List<V2TIMGroupAtInfo> atInfoList) {
+        this.atInfoList = atInfoList;
+    }
 }

@@ -33,9 +33,10 @@
     TUIGroupInfoController *info = [[TUIGroupInfoController alloc] init];
     info.groupId = _groupId;
     info.delegate = self;
+    info.view.frame = self.view.bounds;
     [self addChildViewController:info];
     [self.view addSubview:info.view];
-    self.title = @"详细资料";
+    self.title = NSLocalizedString(@"ProfileDetails", nil); // @"详细资料";
 }
 
 - (void)didReceiveMemoryWarning {
@@ -49,7 +50,7 @@
 {
     GroupMemberController *membersController = [[GroupMemberController alloc] init];
     membersController.groupId = groupId;
-    membersController.title = @"群成员";
+    membersController.title = NSLocalizedString(@"GroupMember", nil); // @"群成员";
     [self.navigationController pushViewController:membersController animated:YES];
 }
 
@@ -59,7 +60,7 @@
 - (void)groupInfoController:(TUIGroupInfoController *)controller didAddMembersInGroup:(NSString *)groupId members:(NSArray<TGroupMemberCellData *> *)members
 {
     TUIContactSelectController *vc = [[TUIContactSelectController alloc] initWithNibName:nil bundle:nil];
-    vc.title = @"添加联系人";
+    vc.title = NSLocalizedString(@"GroupAddFirend", nil); // @"添加联系人";
     vc.viewModel.disableFilter = ^BOOL(TCommonContactSelectCellData *data) {
         for (TGroupMemberCellData *cd in members) {
             if ([cd.identifier isEqualToString:data.identifier])
@@ -88,10 +89,10 @@
 - (void)groupInfoController:(TUIGroupInfoController *)controller didDeleteMembersInGroup:(NSString *)groupId members:(NSArray<TGroupMemberCellData *> *)members
 {
     TUIContactSelectController *vc = [[TUIContactSelectController alloc] initWithNibName:nil bundle:nil];
-    vc.title = @"删除联系人";
+    vc.title = NSLocalizedString(@"GroupDeleteFriend", nil); // @"删除联系人";
     NSMutableArray *ids = NSMutableArray.new;
     for (TGroupMemberCellData *cd in members) {
-        if (![cd.identifier isEqualToString:[[TIMManager sharedInstance] getLoginUser]]) {
+        if (![cd.identifier isEqualToString:[[V2TIMManager sharedInstance] getLoginUser]]) {
             [ids addObject:cd.identifier];
         }
     }
@@ -116,11 +117,11 @@
  */
 - (void)addGroupId:(NSString *)groupId memebers:(NSArray *)members controller:(TUIGroupInfoController *)controller
 {
-    [[TIMGroupManager sharedInstance] inviteGroupMember:_groupId members:members succ:^(NSArray *members) {
-        [THelper makeToast:@"添加成功"];
+    [[V2TIMManager sharedInstance] inviteUserToGroup:_groupId userList:members succ:^(NSArray<V2TIMGroupMemberOperationResult *> *resultList) {
+        [THelper makeToast:NSLocalizedString(@"add_success", nil)];
         [controller updateData];
-    } fail:^(int code, NSString *msg) {
-        [THelper makeToastError:code msg:msg];
+    } fail:^(int code, NSString *desc) {
+        [THelper makeToastError:code msg:desc];
     }];
 }
 
@@ -129,11 +130,11 @@
  */
 - (void)deleteGroupId:(NSString *)groupId memebers:(NSArray *)members controller:(TUIGroupInfoController *)controller
 {
-    [[TIMGroupManager sharedInstance] deleteGroupMemberWithReason:groupId reason:@"" members:members succ:^(NSArray *members) {
-        [THelper makeToast:@"删除成功"];
+    [[V2TIMManager sharedInstance] kickGroupMember:groupId memberList:members reason:@"" succ:^(NSArray<V2TIMGroupMemberOperationResult *> *resultList) {
+        [THelper makeToast:NSLocalizedString(@"delete_success", nil)];
         [controller updateData];
-    } fail:^(int code, NSString *msg) {
-        [THelper makeToastError:code msg:msg];
+    } fail:^(int code, NSString *desc) {
+        [THelper makeToastError:code msg:desc];
     }];
 }
 
@@ -155,11 +156,14 @@
 
 - (void)groupInfoController:(TUIGroupInfoController *)controller didSelectChangeAvatar:(NSString *)groupId
 {
-    UIAlertController *ac = [UIAlertController alertControllerWithTitle:@"TUIKit为您选择一个头像" message:nil preferredStyle:UIAlertControllerStyleAlert];
-    [ac addAction:[UIAlertAction actionWithTitle:@"好" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+    UIAlertController *ac = [UIAlertController alertControllerWithTitle:NSLocalizedString(@"choose_avatar_for_you", nil) message:nil preferredStyle:UIAlertControllerStyleAlert];
+    [ac addAction:[UIAlertAction actionWithTitle:NSLocalizedString(@"OK", nil) style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
         NSString *url = [THelper randAvatarUrl];
-        [[TIMGroupManager sharedInstance] modifyGroupFaceUrl:groupId url:url succ:^{
-            [controller updateData];
+        V2TIMGroupInfo *info = [[V2TIMGroupInfo alloc] init];
+        info.groupID = groupId;
+        info.faceURL = url;
+        [[V2TIMManager sharedInstance] setGroupInfo:info succ:^{
+            [controller updateData];;
         } fail:^(int code, NSString *msg) {
             [THelper makeToastError:code msg:msg];
         }];

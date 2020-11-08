@@ -46,7 +46,7 @@
 - (void)groupMemberController:(TUIGroupMemberController *)controller didAddMembersInGroup:(NSString *)groupId hasMembers:(NSMutableArray *)members
 {
     TUIContactSelectController *vc = [[TUIContactSelectController alloc] initWithNibName:nil bundle:nil];
-    vc.title = @"添加联系人";
+    vc.title = NSLocalizedString(@"GroupAddFirend", nil); // @"添加联系人";
     vc.viewModel.disableFilter = ^BOOL(TCommonContactSelectCellData *data) {
         for (TGroupMemberCellData *cd in members) {
             if ([cd.identifier isEqualToString:data.identifier])
@@ -70,7 +70,7 @@
 - (void)groupMemberController:(TUIGroupMemberController *)controller didDeleteMembersInGroup:(NSString *)groupId hasMembers:(NSMutableArray *)members
 {
     TUIContactSelectController *vc = [[TUIContactSelectController alloc] initWithNibName:nil bundle:nil];
-    vc.title = @"删除联系人";
+    vc.title = NSLocalizedString(@"GroupDeleteFriend", nil); // @"删除联系人";
     vc.viewModel.avaliableFilter = ^BOOL(TCommonContactSelectCellData *data) {
         for (TGroupMemberCellData *cd in members) {
             if ([cd.identifier isEqualToString:data.identifier])
@@ -93,21 +93,21 @@
 
 - (void)addGroupId:(NSString *)groupId memebers:(NSArray *)members controller:(TUIGroupMemberController *)controller
 {
-    [[TIMGroupManager sharedInstance] inviteGroupMember:_groupId members:members succ:^(NSArray *members) {
-        [THelper makeToast:@"添加成功"];
+    [[V2TIMManager sharedInstance] inviteUserToGroup:_groupId userList:members succ:^(NSArray<V2TIMGroupMemberOperationResult *> *resultList) {
+        [THelper makeToast:NSLocalizedString(@"add_success", nil)];
         [controller updateData];
-    } fail:^(int code, NSString *msg) {
-        [THelper makeToastError:code msg:msg];
+    } fail:^(int code, NSString *desc) {
+        [THelper makeToastError:code msg:desc];
     }];
 }
 
 - (void)deleteGroupId:(NSString *)groupId memebers:(NSArray *)members controller:(TUIGroupMemberController *)controller
 {
-    [[TIMGroupManager sharedInstance] deleteGroupMemberWithReason:groupId reason:@"" members:members succ:^(NSArray *members) {
-        [THelper makeToast:@"删除成功"];
+    [[V2TIMManager sharedInstance] kickGroupMember:groupId memberList:members reason:@"" succ:^(NSArray<V2TIMGroupMemberOperationResult *> *resultList) {
+        [THelper makeToast:NSLocalizedString(@"delete_success", nil)];
         [controller updateData];
-    } fail:^(int code, NSString *msg) {
-        [THelper makeToastError:code msg:msg];
+    } fail:^(int code, NSString *desc) {
+        [THelper makeToastError:code msg:desc];
     }];
 }
 @end

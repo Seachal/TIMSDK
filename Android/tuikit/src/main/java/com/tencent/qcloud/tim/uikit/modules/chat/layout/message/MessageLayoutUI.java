@@ -2,14 +2,18 @@ package com.tencent.qcloud.tim.uikit.modules.chat.layout.message;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
-import android.support.annotation.Nullable;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import android.util.AttributeSet;
 
+import com.tencent.qcloud.tim.uikit.component.CustomLinearLayoutManager;
 import com.tencent.qcloud.tim.uikit.component.action.PopMenuAction;
 import com.tencent.qcloud.tim.uikit.modules.chat.interfaces.IMessageLayout;
 import com.tencent.qcloud.tim.uikit.modules.chat.interfaces.IMessageProperties;
+import com.tencent.qcloud.tim.uikit.modules.chat.layout.message.holder.IGroupMessageClickListener;
 import com.tencent.qcloud.tim.uikit.modules.chat.layout.message.holder.IOnCustomMessageDrawListener;
 import com.tencent.qcloud.tim.uikit.utils.ScreenUtil;
 
@@ -47,7 +51,7 @@ public abstract class MessageLayoutUI extends RecyclerView implements IMessageLa
         setItemViewCacheSize(0);
         setHasFixedSize(true);
         setFocusableInTouchMode(false);
-        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getContext());
+        LinearLayoutManager linearLayoutManager = new CustomLinearLayoutManager(getContext());
         linearLayoutManager.setOrientation(LinearLayoutManager.VERTICAL);
         setLayoutManager(linearLayoutManager);
     }
@@ -235,6 +239,11 @@ public abstract class MessageLayoutUI extends RecyclerView implements IMessageLa
     @Override
     public void setOnCustomMessageDrawListener(IOnCustomMessageDrawListener listener) {
         mAdapter.setOnCustomMessageDrawListener(listener);
+    }
+
+    @Override
+    public void setIGroupMessageClickListener(IGroupMessageClickListener listener) {
+        mAdapter.setIGroupMessageClickListener(listener);
     }
 
     @Override

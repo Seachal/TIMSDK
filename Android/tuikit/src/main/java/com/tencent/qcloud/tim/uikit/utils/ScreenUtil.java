@@ -5,7 +5,7 @@ import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Point;
 import android.graphics.Rect;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.View;
@@ -138,5 +138,10 @@ public class ScreenUtil {
             height = (int) (containerWidth / rate);
         }
         return new int[]{width, height};
+    }
+
+    public static int dip2px(float dpValue) {
+        final float scale = TUIKit.getAppContext().getResources().getDisplayMetrics().density;
+        return (int) (dpValue * scale + 0.5f);
     }
 }

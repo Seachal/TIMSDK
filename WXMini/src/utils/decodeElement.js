@@ -20,6 +20,7 @@ const GROUP_TIP_TYPE = {
   MEMBER_INFO_MODIFIED: 7 // 修改群成员信息
 }
 
+// 解析小程序text, 表情信息也是[嘻嘻]文本
 function parseText (message) {
   let renderDom = []
   let temp = message.payload.text
@@ -71,6 +72,7 @@ function parseText (message) {
   }
   return renderDom
 }
+// 解析群系统消息
 function parseGroupSystemNotice (message) {
   const payload = message.payload
   const groupName =
@@ -116,33 +118,37 @@ function parseGroupSystemNotice (message) {
     text: text
   }]
 }
+// 解析群提示消息
 function parseGroupTip (message) {
   const payload = message.payload
+  const userName = message.nick || payload.userIDList.join(',')
   let tip
   switch (payload.operationType) {
     case GROUP_TIP_TYPE.MEMBER_JOIN:
-      tip = `新成员加入：${payload.userIDList.join(',')}`
+      tip = `新成员加入：${userName}`
       break
     case GROUP_TIP_TYPE.MEMBER_QUIT:
-      tip = `群成员退群：${payload.userIDList.join(',')}`
+      tip = `群成员退群：${userName}`
       break
     case GROUP_TIP_TYPE.MEMBER_KICKED_OUT:
-      tip = `群成员被踢：${payload.userIDList.join(',')}`
+      tip = `群成员被踢：${userName}`
       break
     case GROUP_TIP_TYPE.MEMBER_SET_ADMIN:
-      tip = `${payload.operatorID}将${payload.userIDList.join(',')}设置为管理员`
+      tip = `${payload.operatorID}将 ${userName}设置为管理员`
       break
     case GROUP_TIP_TYPE.MEMBER_CANCELED_ADMIN:
-      tip = `${payload.operatorID}将${payload.userIDList.join(',')}取消作为管理员`
+      tip = `${payload.operatorID}将 ${userName}取消作为管理员`
       break
     case GROUP_TIP_TYPE.GROUP_INFO_MODIFIED:
       tip = '群资料修改'
       break
     case GROUP_TIP_TYPE.MEMBER_INFO_MODIFIED:
-      tip = '群成员资料修改'
-      if (payload.msgMemberInfo[0].hasOwnProperty('shutupTime')) {
-        const time = (payload.msgMemberInfo[0].shutupTime / 60).toFixed(0)
-        tip = `${payload.operatorID}将${payload.msgMemberInfo[0].userID}禁言${time}分钟`
+      for (let member of payload.memberList) {
+        if (member.muteTime > 0) {
+          tip = `群成员：${member.userID}被禁言${member.muteTime}秒`
+        } else {
+          tip = `群成员：${member.userID}被取消禁言`
+        }
       }
       break
   }
@@ -151,7 +157,7 @@ function parseGroupTip (message) {
     text: tip
   }]
 }
-
+// 解析自定义消息
 function parseCustom (message) {
   let data = message.payload.data
   if (isJSON(data)) {
@@ -200,6 +206,7 @@ function parseCustom (message) {
     text: data
   }]
 }
+// 解析message element
 export function decodeElement (message) {
   // renderDom是最终渲染的
   switch (message.type) {

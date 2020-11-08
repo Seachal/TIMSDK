@@ -1,68 +1,72 @@
 PODS:
-  - AFNetworking (3.2.1):
-    - AFNetworking/NSURLSession (= 3.2.1)
-    - AFNetworking/Reachability (= 3.2.1)
-    - AFNetworking/Security (= 3.2.1)
-    - AFNetworking/Serialization (= 3.2.1)
-    - AFNetworking/UIKit (= 3.2.1)
-  - AFNetworking/NSURLSession (3.2.1):
-    - AFNetworking/Reachability
-    - AFNetworking/Security
-    - AFNetworking/Serialization
-  - AFNetworking/Reachability (3.2.1)
-  - AFNetworking/Security (3.2.1)
-  - AFNetworking/Serialization (3.2.1)
-  - AFNetworking/UIKit (3.2.1):
-    - AFNetworking/NSURLSession
-  - ISVImageScrollView (0.1.2)
-  - MBProgressHUD (1.2.0)
+  - lottie-ios (2.5.3)
+  - Masonry (1.1.0)
+  - MJExtension (3.2.2)
+  - MJRefresh (3.5.0)
   - MMLayout (0.2.0)
   - ReactiveObjC (3.1.1)
-  - SDWebImage (5.5.2):
-    - SDWebImage/Core (= 5.5.2)
-  - SDWebImage/Core (5.5.2)
+  - SDWebImage (5.9.0):
+    - SDWebImage/Core (= 5.9.0)
+  - SDWebImage/Core (5.9.0)
+  - SSZipArchive (2.2.3)
   - Toast (4.0.0)
-  - TXIMSDK_iOS (4.6.101)
-  - TXIMSDK_TUIKit_iOS (4.6.100):
-    - ISVImageScrollView (= 0.1.2)
+  - TXIMSDK_iOS (5.1.1)
+  - TXIMSDK_TUIKit_iOS (5.1.1):
     - MMLayout (= 0.2.0)
     - ReactiveObjC (= 3.1.1)
-    - SDWebImage (= 5.5.2)
+    - SDWebImage (= 5.9.0)
     - Toast (= 4.0.0)
-    - TXIMSDK_iOS
-  - TXLiteAVSDK_TRTC (6.9.8341)
+    - TXIMSDK_iOS (= 5.1.1)
+    - TXLiteAVSDK_TRTC (= 7.8.9519)
+  - TXIMSDK_TUIKit_live_iOS (5.1.1):
+    - lottie-ios (= 2.5.3)
+    - Masonry (= 1.1.0)
+    - MJExtension (= 3.2.2)
+    - MMLayout (= 0.2.0)
+    - ReactiveObjC (= 3.1.1)
+    - SDWebImage (= 5.9.0)
+    - SSZipArchive (= 2.2.3)
+    - Toast (= 4.0.0)
+    - TXIMSDK_iOS (= 5.1.1)
+    - TXLiteAVSDK_TRTC (= 7.8.9519)
+  - TXLiteAVSDK_TRTC (7.8.9519)
 
 DEPENDENCIES:
-  - AFNetworking
-  - MBProgressHUD
+  - MJRefresh
   - TXIMSDK_TUIKit_iOS
-  - TXLiteAVSDK_TRTC
+  - TXIMSDK_TUIKit_live_iOS
 
 SPEC REPOS:
   https://github.com/CocoaPods/Specs.git:
-    - AFNetworking
-    - ISVImageScrollView
-    - MBProgressHUD
+    - lottie-ios
+    - Masonry
+    - MJExtension
+    - MJRefresh
     - MMLayout
     - ReactiveObjC
     - SDWebImage
+    - SSZipArchive
     - Toast
     - TXIMSDK_iOS
     - TXIMSDK_TUIKit_iOS
+    - TXIMSDK_TUIKit_live_iOS
     - TXLiteAVSDK_TRTC
 
 SPEC CHECKSUMS:
-  AFNetworking: b6f891fdfaed196b46c7a83cf209e09697b94057
-  ISVImageScrollView: ba511d12a1661b40feb8921309c0854bf93ec749
-  MBProgressHUD: 3ee5efcc380f6a79a7cc9b363dd669c5e1ae7406
+  lottie-ios: a50d5c0160425cd4b01b852bb9578963e6d92d31
+  Masonry: 678fab65091a9290e40e2832a55e7ab731aad201
+  MJExtension: d9b9c74cbdeb724c1e9ecbb157b318276e62e876
+  MJRefresh: 6afc955813966afb08305477dd7a0d9ad5e79a16
   MMLayout: 3fb59d58eeb8656c64e61d550fb0088e10666c11
   ReactiveObjC: 011caa393aa0383245f2dcf9bf02e86b80b36040
-  SDWebImage: 4d5c027c935438f341ed33dbac53ff9f479922ca
+  SDWebImage: 62ae4a18473520c67b79e9724c31a63599cc9423
+  SSZipArchive: 62d4947b08730e4cda640473b0066d209ff033c9
   Toast: 91b396c56ee72a5790816f40d3a94dd357abc196
-  TXIMSDK_iOS: f080472d4c10cb2b0bc58f86f340f1e8a49d34ad
-  TXIMSDK_TUIKit_iOS: 7c5a6556929b590e3d2cfb85a865a3c5b28f4d87
-  TXLiteAVSDK_TRTC: 0d23d1ff11bfed12e6ed2ea48eb013459018e054
+  TXIMSDK_iOS: fc97e918f6357573a5d61a9dcd8e9a8dc6ea0906
+  TXIMSDK_TUIKit_iOS: f8b8524b64a4f00c8a2f1af3c7501dc976453f88
+  TXIMSDK_TUIKit_live_iOS: 3baec4edcf5062985488cb7414964654fc2badab
+  TXLiteAVSDK_TRTC: c127880c4dbe844bdc7575a655be8042ce96024a
 
-PODFILE CHECKSUM: e018a0260749c0ea2e4aa9377cee378860ae7eb8
+PODFILE CHECKSUM: c6c7d57f088ecc75becbf79a03ada7707285671c
 
-COCOAPODS: 1.8.4
+COCOAPODS: 1.9.3

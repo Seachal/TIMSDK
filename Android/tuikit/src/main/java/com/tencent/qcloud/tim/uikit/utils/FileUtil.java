@@ -11,8 +11,11 @@ import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.provider.OpenableColumns;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+import android.text.TextUtils;
 import android.util.Log;
 
 import com.tencent.qcloud.tim.uikit.TUIKit;
@@ -111,20 +114,21 @@ public class FileUtil {
     }
 
     public static String getPathFromUri(Uri uri) {
+        String path = "";
         try {
             int sdkVersion = Build.VERSION.SDK_INT;
             if (sdkVersion >= 19) {
-                //
-                // return getRealPathFromUri_AboveApi19(uri);
-                return getPath(TUIKit.getAppContext(), uri);
+                path = getPath(TUIKit.getAppContext(), uri);
             } else {
-                return getRealFilePath(uri);
+                path = getRealFilePath(uri);
             }
-            //return new File(new URI(uri.toString())).getAbsolutePath();
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return "";
+        if (path == null) {
+            path = "";
+        }
+        return path;
     }
 
     public static String getRealFilePath(Uri uri) {
@@ -227,15 +231,7 @@ public class FileUtil {
                 }
 
                 // 在某些android8+的手机上，无法获取路径，所以用拷贝的方式，获取新文件名，然后把文件发出去
-                String fileName = getFileName(context, uri);
-                File cacheDir = getDocumentCacheDir(context);
-                File file = generateFileName(fileName, cacheDir);
-                String destinationPath = null;
-                if (file != null) {
-                    destinationPath = file.getAbsolutePath();
-                    saveFileFromUri(context, uri, destinationPath);
-                }
-
+                String destinationPath = getPathByCopyFile(context, uri);
                 return destinationPath;
             }
             // MediaProvider
@@ -257,12 +253,21 @@ public class FileUtil {
                 final String selection = "_id=?";
                 final String[] selectionArgs = new String[]{split[1]};
 
-                return getDataColumn(context, contentUri, selection, selectionArgs);
+                String path = getDataColumn(context, contentUri, selection, selectionArgs);
+                if (TextUtils.isEmpty(path)) {
+                    path = getPathByCopyFile(context, uri);
+                }
+                return path;
             }
         }
         // MediaStore (and general)
         else if ("content".equalsIgnoreCase(uri.getScheme())) {
-            return getDataColumn(context, uri, null, null);
+            String path = getDataColumn(context, uri, null, null);
+            if (TextUtils.isEmpty(path)) {
+                // 在某些华为android9+的手机上，无法获取路径，所以用拷贝的方式，获取新文件名，然后把文件发出去
+                path = getPathByCopyFile(context, uri);
+            }
+            return path;
         }
         // File
         else if ("file".equalsIgnoreCase(uri.getScheme())) {
@@ -270,6 +275,19 @@ public class FileUtil {
         }
 
         return null;
+    }
+
+    private static String getPathByCopyFile(Context context, Uri uri) {
+        String fileName = getFileName(context, uri);
+        File cacheDir = getDocumentCacheDir(context);
+        File file = generateFileName(fileName, cacheDir);
+        String destinationPath = null;
+        if (file != null) {
+            destinationPath = file.getAbsolutePath();
+            saveFileFromUri(context, uri, destinationPath);
+        }
+
+        return destinationPath;
     }
 
     @Nullable
@@ -395,6 +413,8 @@ public class FileUtil {
                 final int column_index = cursor.getColumnIndexOrThrow(column);
                 return cursor.getString(column_index);
             }
+        } catch (Exception e) {
+            e.printStackTrace();
         } finally {
             if (cursor != null) {
                 cursor.close();

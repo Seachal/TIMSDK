@@ -1,7 +1,7 @@
 <template>
   <div class="chat"
        id="chat"
-       :style="{ paddingBottom: isIpx ? (safeBottom + 70) + 'px': '70px' }"
+       :style="{ paddingBottom: isIphoneX ? (safeBottom + 70) + 'px': '70px' }"
        @longpress="handleLongPress"
        @touchmove="handleTouchMove"
        @touchend="handleTouchEnd">
@@ -20,9 +20,10 @@
     </i-modal>
     <i-modal title="发送自定义消息" :visible="customModalVisible" @ok="sendCustomMessage" @cancel="customModal">
       <div class="custom-wrapper">
-        <input type="text" class="custom-input" placeholder="输入数据" v-model.lazy:value="customData"/>
-        <input type="text" class="custom-input" placeholder="输入描述" v-model.lazy:value="customDescription"/>
-        <input type="text" class="custom-input" placeholder="输入其他" v-model.lazy:value="customExtension"/>
+        <!-- 为了修复iOS input框不跟随父容器显隐状态，分别设置渲染条件 -->
+        <input v-if="customModalVisible" type="text" class="custom-input" :class="{'input-focus': focusedInput === 'data'}" placeholder="输入数据" v-model.lazy:value="customData" @focus="focusedInput = 'data'" @blur="focusedInput = ''"/>
+        <input v-if="customModalVisible" type="text" class="custom-input" :class="{'input-focus': focusedInput === 'desc'}" placeholder="输入描述" v-model.lazy:value="customDescription" @focus="focusedInput = 'desc'" @blur="focusedInput = ''"/>
+        <input v-if="customModalVisible" type="text" class="custom-input" :class="{'input-focus': focusedInput === 'ext'}" placeholder="输入其他" v-model.lazy:value="customExtension" @focus="focusedInput = 'ext'" @blur="focusedInput = ''"/>
       </div>
     </i-modal>
     <i-modal title="对IM demo的评分和评价" i-class="custom-modal" :visible="rateModal" @ok="sendSurvey" @cancel="rateModal = false">
@@ -31,7 +32,8 @@
           @change="onChange"
           :value="rate">
         </i-rate>
-        <input type="text" class="custom-input" placeholder="输入评价" v-model.lazy:value="customExtension"/>
+        <!-- 为了修复iOS input框不跟随父容器显隐状态，分别设置渲染条件 -->
+        <input v-if="rateModal" type="text" class="custom-input" placeholder="输入评价" v-model.lazy:value="customExtension"/>
       </div>
     </i-modal>
     <i-modal title="提示"
@@ -80,10 +82,14 @@
                 </template>
               </template>
               <template v-else>
-                {{message.nameCard || message.nick || message.from}}
+                {{message.nameCard || message.nick || myInfo.nick || message.from}}
               </template>
             </div>
             <div class="wrapper" @longpress="handleMessage(message)">
+              <div class="name read-receipts" v-if="currentConversation.type === 'C2C' && message.from === myInfo.userID && message.status === 'success'">
+                <template v-if="message.isPeerRead">已读</template>
+                <template v-else>未读</template>
+              </div>
               <div class="load" @click="handleResend(message)" v-if="message.from === myInfo.userID">
                 <div :class="message.status">
                 </div>
@@ -129,12 +135,12 @@
               <div class="message" v-else-if="message.type === 'TIMSoundElem'" :url="message.payload.url">
                 <div class="box" @click="openAudio(message.payload)">
                   <image src="/static/images/audio-play.png" style="height:22px;width:22px"/>
-                  <div style="padding-left: 4px;font-weight: 500; font-size: 20px">{{message.payload.second}}s</div>
+                  <div style="padding-left: 4px;">{{message.payload.second}}s</div>
                 </div>
               </div>
               <div class="message" v-else-if="message.type === 'TIMFaceElem'">
                 <div class="custom-elem">
-                  <image :src="message.payload.data.indexOf('@') > 0 ? faceUrl + message.payload.data + '.png' : faceUrl + message.payload.data + '@2x.png'" style="height:90px; width:90px"/>
+                  <image :src="faceUrl + message.payload.data + '.png'" style="height:90px; width:90px"/>
                 </div>
               </div>
               <div class="message" v-else-if="message.type === 'TIMVideoFileElem'">
@@ -153,18 +159,21 @@
         </div>
       </li>
     </div>
-<!--    输入框及选择框部分-->
-    <div class="bottom" :style="{ paddingBottom: isIpx ? safeBottom + 'px': '' }">
+<!--  输入框及选择框部分 -->
+    <div class="bottom" :style="{ paddingBottom: isIphoneX ? safeBottom + 'px': '' }">
       <div class="bottom-div">
         <div class="btn-left" @click="chooseRecord">
-          <icon :src="!isRecord ? '../../../static/images/audio.png' : '../../../static/images/record.png'" size="28"/>
+          <icon :src="!isRecord ? '../../../static/images/audio.png' : '../../../static/images/record.png'" :size="28"/>
         </div>
         <div v-if="!isRecord" style="width: 100%">
           <input type="text"
                  class="input"
                  v-model.lazy:value="messageContent"
                  confirm-type="send"
+                 cursor-spacing="10"
                  :focus="isFocus"
+                 @focus="isFocus = true"
+                 @blur="isFocus = false"
                  @confirm='sendMessage'/>
         </div>
         <div class="record"
@@ -179,13 +188,13 @@
         </div>
 
         <div class="btn" @click="handleEmoji()">
-          <icon src="../../../static/images/smile.png" size="28"></icon>
+          <icon src="../../../static/images/smile.png" :size="28"></icon>
         </div>
         <div class="send" @click="sendMessage" v-if="messageContent.length !== 0">
             发送
         </div>
         <div class="btn" @click="handleMore()" v-else>
-          <icon src="../../../static/images/more.png" size="28"></icon>
+          <icon src="../../../static/images/more.png" :size="28"></icon>
         </div>
 
       </div>
@@ -196,9 +205,6 @@
             <div class="single" @click="handleEmojiShow" :class="emojiShow ? 'choosed' : ''">
               <image src="/static/images/smile.png" style="width:100%;height:100%"></image>
             </div>
-            <div class="single" @click="handleBigEmojiShow" :class="bigEmojiShow ? 'choosed' : ''">
-              <image :src="faceUrl + 'tt16@2x.png'" style="width:100%;height:100%"></image>
-            </div>
           </div>
         </div>
         <div class="emojis" v-if="emojiShow">
@@ -206,15 +212,18 @@
             <image :src="emojiUrl + emojiMap[emojiItem]" style="width:100%;height:100%"/>
           </div>
         </div>
-        <div class="emojis" v-if="bigEmojiShow">
-          <div v-for="(bigItem, index4) in bigEmoji" class="bigemoji" :key="bigItem" @click="chooseBigEmoji(bigItem)">
-            <image :src="faceUrl + bigItem + '@2x.png'" style="width:100%;height:100%"/>
-          </div>
-        </div>
       </div>
 <!--    更多部分-->
       <div class="bottom-image" v-if="isMoreOpen">
         <div class="images">
+          <div class="block" @click="sendPhoto('camera')">
+            <div class="image">
+              <image src="/static/images/take-pic.png" class="icon"/>
+            </div>
+            <div class="name">
+              拍摄
+            </div>
+          </div>
           <div class="block" @click="sendPhoto('album')">
             <div class="image">
               <image src="/static/images/picture.png" class="icon"/>
@@ -223,23 +232,15 @@
               图片
             </div>
           </div>
-          <div class="block" @click="sendPhoto('camera')">
-            <div class="image">
-              <image src="/static/images/take-pic.png" class="icon"/>
-            </div>
-            <div class="name">
-              拍照
-            </div>
-          </div>
           <div class="block" @click="customModal()">
             <div class="image">
               <image src="/static/images/custom.png" class="icon"/>
             </div>
             <div class="name">
-              自定义
+              自定义消息
             </div>
           </div>
-          <div class="block" @click="rateModal = true">
+          <div class="block" @click="rateModal = !rateModal">
             <div class="image">
               <image src="/static/images/rating.png" class="icon"/>
             </div>
@@ -276,7 +277,7 @@
 </template>
 
 <script>
-import { mapState } from 'vuex'
+import { mapState, mapGetters } from 'vuex'
 import { emojiName, emojiMap, emojiUrl } from '../../utils/emojiMap'
 import { throttle } from '../../utils/index'
 const audioContext = wx.createInnerAudioContext()
@@ -313,8 +314,8 @@ export default {
       customData: '',
       customDescription: '',
       customExtension: '',
+      focusedInput: '',
       safeBottom: 34,
-      isIpx: false,
       isRecord: false,
       isRecording: false,
       canSend: true,
@@ -325,8 +326,6 @@ export default {
       isShow: false,
       faceUrl: 'https://webim-1252463788.file.myqcloud.com/assets/face-elem/',
       emojiShow: true,
-      bigEmojiShow: false,
-      bigEmoji: ['tt01', 'tt02', 'tt03', 'tt04', 'tt05', 'tt06', 'tt07', 'tt08', 'tt09', 'tt10', 'tt11', 'tt12', 'tt13', 'tt14', 'tt15', 'tt16'],
       revokeModal: false,
       revokeMessage: {},
       currentTime: 0,
@@ -346,10 +345,7 @@ export default {
     wx.setNavigationBarTitle({
       title: this.set
     })
-    let sysInfo = wx.getSystemInfoSync()
-    this.sysInfo = sysInfo
-    this.height = sysInfo.windowHeight
-    this.isIpx = (sysInfo.model.indexOf('iPhone X') > -1)
+    this.height = this.sysInfo.windowHeight
     let query = wx.createSelectorQuery()
     let that = this
     wx.$app.on(this.TIM.EVENT.MESSAGE_RECEIVED, () => {
@@ -424,29 +420,97 @@ export default {
   computed: {
     ...mapState({
       currentMessageList: state => {
-        console.log(state.conversation.currentMessageList)
-        return state.conversation.currentMessageList
+        let list = state.conversation.currentMessageList
+        // 对list中的表情包消息进行预处理，template中无法执行js语法
+        for (let i = 0; i < list.length; i++) {
+          if (list[i].type === 'TIMFaceElem') {
+            let data = list[i].payload.data
+            list[i].payload.data = data.indexOf('@2x') > 0 ? data : `${data}@2x`
+          }
+        }
+        return list
       },
       currentConversation: state => state.conversation.currentConversation,
-      myInfo: state => state.user.myInfo
-    })
+      myInfo: state => state.user.myInfo,
+      sysInfo: state => state.global.systemInfo
+    }),
+    ...mapGetters(['isIphoneX'])
   },
   methods: {
     onChange (e) {
       this.rate = e.mp.detail.index
     },
+    // 提示前往设置页
+    toSettingPage (options) {
+      wx.showModal({
+        title: '授权提示',
+        content: options.content,
+        success: (tipRes) => {
+          if (tipRes.confirm) {
+            wx.openSetting({
+              success: (settingRes) => {
+                options.suc && options.suc(settingRes)
+              },
+              fail: () => {
+                options.fail && options.fail()
+              }
+            })
+          } else {
+            options.cancel && options.cancel()
+          }
+        }
+      })
+    },
+    // 长按录音，监听在页面最外层div，如果是放在button的话，手指上划离开button后获取距离变化有bug
     handleLongPress (e) {
       this.startPoint = e.touches[0]
       if (e.target.id === 'record') {
-        this.title = '正在录音'
-        this.isRecording = true
-        this.startRecording()
-        this.canSend = true
+        wx.getSetting({
+          success: (res) => {
+            let auth = res.authSetting['scope.record']
+            if (auth === true) { // 用户已经同意授权
+              this.title = '正在录音'
+              this.isRecording = true
+              this.startRecording()
+              this.canSend = true
+            } else if (auth === false) { // 首次发起授权
+              this.toSettingPage({
+                content: '请前往设置页打开麦克风',
+                suc: (res) => { if (!res.authSetting['scope.record']) { this.isRecord = false } },
+                fail: () => { this.isRecord = false },
+                cancel: () => { this.isRecord = false }
+              })
+            }
+          },
+          fail: () => {}
+        })
       }
     },
     chooseRecord () {
       this.isRecord = !this.isRecord
+      if (this.isRecord) {
+        wx.getSetting({
+          success: (res) => {
+            if (res.authSetting['scope.record'] === false) { // 已申请授权，但已被用户拒绝
+              this.toSettingPage({
+                content: '请前往设置页打开麦克风',
+                suc: (res) => { if (!res.authSetting['scope.record']) { this.isRecord = false } },
+                fail: () => { this.isRecord = false },
+                cancel: () => { this.isRecord = false }
+              })
+            }
+          },
+          fail: () => {
+            wx.showToast({
+              title: '获取授权信息失败',
+              icon: 'none',
+              duration: 1500
+            })
+          }
+        })
+      }
     },
+    // 录音时的手势上划移动距离对应文案变化
     handleTouchMove (e) {
       if (this.isRecording) {
         if (this.startPoint.clientY - e.touches[e.touches.length - 1].clientY > 100) {
@@ -461,58 +525,15 @@ export default {
         }
       }
     },
+    // 手指离开页面滑动
     handleTouchEnd () {
       this.isRecording = false
       wx.hideLoading()
       recorderManager.stop()
     },
+    // 开始录音
     startRecording () {
-      wx.getSetting({
-        success: (res) => {
-          let auth = res.authSetting['scope.record']
-          if (auth === false) { // 已申请过授权，但是用户拒绝
-            wx.openSetting({
-              success: function (res) {
-                let auth = res.authSetting['scope.record']
-                if (auth === true) {
-                  wx.showToast({
-                    title: '授权成功',
-                    icon: 'success',
-                    duration: 1500
-                  })
-                } else {
-                  wx.showToast({
-                    title: '授权失败',
-                    icon: 'none',
-                    duration: 1500
-                  })
-                }
-              }
-            })
-          } else if (auth === true) { // 用户已经同意授权
-            this.isRecording = true
-            recorderManager.start(recordOptions)
-          } else { // 第一次进来，未发起授权
-            wx.authorize({
-              scope: 'scope.record',
-              success: () => {
-                wx.showToast({
-                  title: '授权成功',
-                  icon: 'success',
-                  duration: 1500
-                })
-              }
-            })
-          }
-        },
-        fail: function () {
-          wx.showToast({
-            title: '授权失败',
-            icon: 'none',
-            duration: 1500
-          })
-        }
-      })
+      recorderManager.start(recordOptions)
     },
     // 滚动到列表bottom
     scrollToBottom () {
@@ -557,6 +578,7 @@ export default {
     handleModalShow () {
       this.modalVisible = !this.modalVisible
     },
+    // 下载文件前判断小程序是否支持预览，只支持 office 相关文件预览
     handleDownload (message) {
       const fileType = message.fileUrl.slice(message.fileUrl.lastIndexOf('.')).toLowerCase()
       const allow = ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'pdf']
@@ -641,6 +663,7 @@ export default {
     handleEmoji () {
       if (this.isFocus) {
         this.isFocus = false
+        this.isMoreOpen = false
         this.isEmojiOpen = true
       } else {
         this.isEmojiOpen = !this.isEmojiOpen
@@ -651,6 +674,7 @@ export default {
     handleMore () {
       if (this.isFocus) {
         this.isFocus = false
+        this.isEmojiOpen = false
         this.isMoreOpen = true
       } else {
         this.isMoreOpen = !this.isMoreOpen
@@ -699,8 +723,12 @@ export default {
         this.chooseImage(name)
       } else if (name === 'camera') {
         wx.getSetting({
-          success: function (res) {
-            if (!res.authSetting['scope.camera']) { // 无权限，跳转设置权限页面
+          success: (res) => {
+            if (res.authSetting['scope.camera'] === false) { // 已申请授权，但用户已拒绝
+              this.toSettingPage({
+                content: '请前往设置页打开摄像头'
+              })
+            } else if (!res.authSetting['scope.camera']) { // 未申请授权，唤起授权
               wx.authorize({
                 scope: 'scope.camera',
                 success: function () {
@@ -857,25 +885,8 @@ export default {
     },
     handleEmojiShow () {
       this.emojiShow = true
-      this.bigEmojiShow = false
     },
-    handleBigEmojiShow () {
-      this.emojiShow = false
-      this.bigEmojiShow = true
-    },
-    chooseBigEmoji (item) {
-      let message = wx.$app.createFaceMessage({
-        to: this.$store.getters.toAccount,
-        conversationType: this.$store.getters.currentConversationType,
-        payload: {
-          index: 1,
-          data: item
-        }
-      })
-      this.$store.commit('sendMessage', message)
-      wx.$app.sendMessage(message)
-      this.handleClose()
-    },
+    // 长按消息触发是否撤回
     handleMessage (message) {
       if (message.from === this.myInfo.userID) {
         const revokeTimeout = 2 * 60 * 1000
@@ -886,9 +897,9 @@ export default {
         }
       }
     },
+    // 撤回消息
     handleRevokeMessage () {
       wx.$app.revokeMessage(this.revokeMessage).then(res => {
-        console.log(res)
         this.revokeModal = false
         this.$store.commit('showToast', {
           title: '撤回成功',
@@ -896,6 +907,7 @@ export default {
         })
       })
     },
+    // 撤回后时间限制内，重新编辑
     reEdit (message) {
       this.messageContent = message.payload.text
     }
@@ -910,14 +922,16 @@ export default {
   display flex
   flex-direction column
   justify-content center
+  padding 0 12px
+  box-sizing border-box
   .custom-input
-    border 1px solid $border-light
     color $base
     background-color white
     border-radius 8px
     height 30px
     margin 5px 0
     box-sizing border-box
+    border-bottom 1px solid $light-background
 .loadMore
   font-size 14px
   color #8a8a8a
@@ -961,6 +975,7 @@ export default {
   padding 10px
   flex-direction row
   box-sizing border-box
+  transition all 0.3s
   .send
     font-size 14px
     background-color $primary
@@ -968,7 +983,7 @@ export default {
     border-radius 4px
     width 50px
     height fit-content
-    padding 5px
+    padding 6px
     margin-left 12rpx
     text-align center
 .bottom-emoji
@@ -1012,60 +1027,55 @@ export default {
     .choosed
       background-color rgba(255,255,255,0.7)
 .bottom-image
-  height 180px
-  border-bottom 1px solid $border-base
   box-sizing border-box
   .images
-    height 90px
     box-sizing border-box
     display flex
-    flex-direction row
+    padding 0 12px
+    margin-top 16px
+    &:last-child
+      margin-bottom 16px
     .block
-      width 25vw
-      padding 10px 5vw
       box-sizing border-box
-      height 90px
       display flex
       flex-direction column
+      justify-content center
+      align-items center
+      margin 0 12px
       .name
+        margin-top 6px
         font-size 12px
         color $secondary
         text-align center
       .image
-        width 15vw
-        height 15vw
+        width 64px
+        height 64px
+        display flex
+        justify-content center
+        align-items center
         box-sizing border-box
         border-radius 8px
         background-color white
         padding 3vw
         .icon
-          width 9vw
-          height 9vw
+          width 26px
+          height 26px
 .input
-  border 1px solid $border-light
   background-color white
-  border-radius 8px
+  border-radius 6px
   height 34px
   box-sizing border-box
-  padding 0 6px
+  padding 0 8px
 .btn-left
+  display flex
   padding 0
   margin 0
   margin-right 10px
 .btn
+  display flex
   padding 0
   margin 0
   margin-left 10px
-.sending
-  background-color $primary
-  color white
-  display flex
-  justify-content center
-  line-height 26px
-  font-size 14px
-  font-weight 600
-  border-radius 8px
-  margin-right 4px
 .button
   color white
   background-color $primary
@@ -1081,7 +1091,7 @@ export default {
   justify-content center
 li
   margin-top 18px
-  padding 0 20px
+  padding 0 12px
 .fail::before
   padding 2px 8px
   background-color $danger
@@ -1121,8 +1131,6 @@ li
 .image-message
   max-width 180px
   border-radius 2px
-.custom-elem
-  font-weight 600
 .fail
   background-color transparent
 .unSend
@@ -1149,11 +1157,10 @@ li
     flex-direction column
     align-items flex-end
     .name
-      width 100%
       font-size 12px
       line-height 1
       margin-bottom 6px
-      color $regular
+      color $secondary
       text-align right
     .wrapper
       display flex
@@ -1202,11 +1209,11 @@ li
       width 100%
       font-size 12px
       line-height 1
-      color $regular
+      color $secondary
       margin-bottom 6px
     .message
       background-color #f8f8f8
-      border 1px solid #d9d9d9
+      border 1px solid $light-background
       border-radius 2px 8px 8px 8px
 // 音频解析
 .box
@@ -1216,13 +1223,11 @@ li
 .record
   width 100%
   background-color white
-  border 1px solid $border-base
   color $regular
-  border-radius 8px
+  border-radius 6px
   box-sizing border-box
   height 34px
   line-height 34px
-  font-weight 600
   display flex
   justify-content center
 .record-modal
@@ -1285,4 +1290,8 @@ li
   line-height 30px
   font-size 14px
   margin-left 10px
+.read-receipts
+  top 50%
+  transform translateY(45%)
+  margin-right -18px
 </style>

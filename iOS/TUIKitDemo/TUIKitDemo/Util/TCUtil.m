@@ -45,6 +45,10 @@
     return nil;
 }
 
++ (NSString *)dictionary2JsonStr:(NSDictionary *)dict {
+    return [[NSString alloc] initWithData:[self dictionary2JsonData:dict] encoding:NSUTF8StringEncoding];;
+}
+
 + (NSDictionary *)jsonSring2Dictionary:(NSString *)jsonString
 {
     if (jsonString == nil) {
@@ -286,4 +290,7 @@
 }
 
 
++ (void)report:(NSString *)action actionSub:(NSString *)actionSub code:(NSNumber *)code  msg:(NSString *)msg {
+    // to do
+}
 @end

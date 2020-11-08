@@ -1,13 +1,14 @@
 package com.tencent.qcloud.tim.uikit.config;
 
-import com.tencent.imsdk.TIMSdkConfig;
+import com.tencent.imsdk.v2.V2TIMSDKConfig;
 
 public class TUIKitConfigs {
 
     private static TUIKitConfigs sConfigs;
     private GeneralConfig generalConfig;
     private CustomFaceConfig customFaceConfig;
-    private TIMSdkConfig sdkConfig;
+    private V2TIMSDKConfig sdkConfig;
+    private boolean mEnableGroupLiveEntry = true;
 
     private TUIKitConfigs() {
 
@@ -70,7 +71,7 @@ public class TUIKitConfigs {
      *
      * @return
      */
-    public TIMSdkConfig getSdkConfig() {
+    public V2TIMSDKConfig getSdkConfig() {
         return sdkConfig;
     }
 
@@ -80,8 +81,22 @@ public class TUIKitConfigs {
      * @param timSdkConfig
      * @return
      */
-    public TUIKitConfigs setSdkConfig(TIMSdkConfig timSdkConfig) {
+    public TUIKitConfigs setSdkConfig(V2TIMSDKConfig timSdkConfig) {
         this.sdkConfig = timSdkConfig;
         return this;
     }
+
+    /**
+     * 群直播入口开关
+     *
+     * @param enableGroupLiveEntry true：有入口，false：无入口。默认 true
+     */
+    public void setEnableGroupLiveEntry(boolean enableGroupLiveEntry) {
+        mEnableGroupLiveEntry = enableGroupLiveEntry;
+    }
+
+    public boolean isEnableGroupLiveEntry() {
+        return mEnableGroupLiveEntry;
+    }
+
 }

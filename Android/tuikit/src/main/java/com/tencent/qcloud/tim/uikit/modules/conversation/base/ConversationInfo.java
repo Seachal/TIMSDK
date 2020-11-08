@@ -1,8 +1,10 @@
 package com.tencent.qcloud.tim.uikit.modules.conversation.base;
 
 import android.graphics.Bitmap;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
+import com.tencent.imsdk.conversation.Conversation;
+import com.tencent.imsdk.v2.V2TIMConversation;
 import com.tencent.qcloud.tim.uikit.modules.message.MessageInfo;
 
 import java.io.Serializable;
@@ -68,6 +70,11 @@ public class ConversationInfo implements Serializable, Comparable<ConversationIn
      * 最后一条消息，MessageInfo对象
      */
     private MessageInfo lastMessage;
+
+    /**
+     * 会话界面显示的@提示消息
+     */
+    private String atInfoText;
 
     public ConversationInfo() {
 
@@ -152,9 +159,23 @@ public class ConversationInfo implements Serializable, Comparable<ConversationIn
         this.lastMessage = lastMessage;
     }
 
+    public void setAtInfoText(String atInfoText) {
+        this.atInfoText = atInfoText;
+    }
+
+    public String getAtInfoText() {
+        return atInfoText;
+    }
+
     @Override
     public int compareTo(@NonNull ConversationInfo other) {
-        return this.lastMessageTime > other.lastMessageTime ? -1 : 1;
+        if (this.lastMessageTime > other.lastMessageTime) {
+            return -1;
+        } else if (this.lastMessageTime == other.lastMessageTime) {
+            return 0;
+        } else {
+            return 1;
+        }
     }
 
     @Override

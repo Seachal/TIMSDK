@@ -1,6 +1,6 @@
 package com.tencent.qcloud.tim.uikit.config;
 
-import com.tencent.imsdk.TIMLogLevel;
+import com.tencent.imsdk.v2.V2TIMSDKConfig;
 
 /**
  * TUIKit的通用配置，比如可以设置日志打印、音视频录制时长等
@@ -13,9 +13,42 @@ public class GeneralConfig {
     private String appCacheDir;
     private int audioRecordMaxTime = DEFAULT_AUDIO_RECORD_MAX_TIME;
     private int videoRecordMaxTime = DEFAULT_VIDEO_RECORD_MAX_TIME;
-    private int logLevel = TIMLogLevel.DEBUG;
+    private int logLevel = V2TIMSDKConfig.V2TIM_LOG_DEBUG;
     private boolean enableLogPrint = true;
     private boolean showRead = false;
+    private boolean testEnv = false;
+    private int sdkAppId = 0;
+    private String userId = "";
+    private String userSig = "";
+    private String userNickname = "";
+
+    public String getUserNickname() {
+        return userNickname;
+    }
+
+    public void setUserNickname(String userNickname) {
+        this.userNickname = userNickname;
+    }
+
+    public String getUserFaceUrl() {
+        return userFaceUrl;
+    }
+
+    public void setUserFaceUrl(String userFaceUrl) {
+        this.userFaceUrl = userFaceUrl;
+    }
+
+    private String userFaceUrl = "";
+
+    private static boolean isSupportAVCall;
+    static {
+        try {
+            Class.forName("com.tencent.trtc.TRTCCloud");
+            isSupportAVCall = true;
+        } catch (Exception e) {
+            isSupportAVCall = false;
+        }
+    }
 
     /**
      * 获取是否打印日志
@@ -129,6 +162,42 @@ public class GeneralConfig {
      */
     public void setShowRead(boolean showRead) {
         this.showRead = showRead;
+    }
+
+    public boolean isTestEnv() {
+        return testEnv;
+    }
+
+    public void setTestEnv(boolean testEnv) {
+        this.testEnv = testEnv;
+    }
+
+    public boolean isSupportAVCall() {
+        return isSupportAVCall;
+    }
+
+    public void setSDKAppId(int sdkAppId) {
+        this.sdkAppId = sdkAppId;
+    }
+
+    public int getSDKAppId() {
+        return sdkAppId;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
+    public String getUserSig() {
+        return userSig;
+    }
+
+    public void setUserSig(String userSig) {
+        this.userSig = userSig;
     }
 
 }

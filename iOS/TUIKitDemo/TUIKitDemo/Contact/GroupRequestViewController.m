@@ -22,6 +22,7 @@
 #import "UIImage+TUIKIT.h"
 #import "TUIKit.h"
 #import "THelper.h"
+#import "TCUtil.h"
 #import "TUIAvatarViewController.h"
 
 @interface GroupRequestViewController ()<UITableViewDataSource, UITableViewDelegate>
@@ -43,21 +44,20 @@
 
     self.addMsgTextView = [[UITextView alloc] initWithFrame:CGRectZero];
     self.addMsgTextView.font = [UIFont systemFontOfSize:14];
-    [[TIMFriendshipManager sharedInstance] getSelfProfile:^(TIMUserProfile *profile) {
-        self.addMsgTextView.text = [NSString stringWithFormat:@"%@ 申请加入群聊", [profile showName]];
+    NSString *loginUser = [[V2TIMManager sharedInstance] getLoginUser];
+    [[V2TIMManager sharedInstance] getUsersInfo:@[loginUser] succ:^(NSArray<V2TIMUserFullInfo *> *infoList) {
+        self.addMsgTextView.text = [NSString stringWithFormat:NSLocalizedString(@"GroupRequestJoinGroupFormat", nil), [[infoList firstObject] showName]]; // "%@ 申请加入群聊
     } fail:^(int code, NSString *msg) {
-
     }];
-
     TUIProfileCardCellData *data = [TUIProfileCardCellData new];
     data.name = self.groupInfo.groupName;
-    data.identifier = self.groupInfo.group;
+    data.identifier = self.groupInfo.groupID;
     data.avatarImage = DefaultGroupAvatarImage;
     data.avatarUrl = [NSURL URLWithString:self.groupInfo.faceURL];
     self.cardCellData = data;
 
-    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"发送" style:UIBarButtonItemStylePlain target:self action:@selector(onSend)];
-    self.title = @"添加群组";
+    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"Send", nil) style:UIBarButtonItemStylePlain target:self action:@selector(onSend)];
+    self.title = NSLocalizedString(@"GroupJoin", nil);
 }
 
 /**
@@ -85,7 +85,7 @@
 - (nullable NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section
 {
     if (section == 1)
-        return @"填写验证信息";
+        return NSLocalizedString(@"please_fill_in_verification_information", nil); // @"填写验证信息";
     return nil;
 }
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
@@ -123,18 +123,16 @@
 {
     // display toast with an activity spinner
     [self.view makeToastActivity:CSToastPositionCenter];
-
-    [[TIMGroupManager sharedInstance] joinGroup:self.groupInfo.group
-                                            msg:self.addMsgTextView.text
-                                           succ:^{
-                                               [self.view hideToastActivity];
-                                               [self.view makeToast:@"发送成功"
-                                                           duration:3.0
-                                                           position:CSToastPositionBottom];
-    } fail:^(int code, NSString *msg) {
+    [[V2TIMManager sharedInstance] joinGroup:self.groupInfo.groupID msg:self.addMsgTextView.text succ:^{
         [self.view hideToastActivity];
-        [THelper makeToastError:code msg:msg];
+        [self.view makeToast:NSLocalizedString(@"send_success", nil)
+                    duration:3.0
+                    position:CSToastPositionBottom];
+    } fail:^(int code, NSString *desc) {
+        [self.view hideToastActivity];
+        [THelper makeToastError:code msg:desc];
     }];
+    [TCUtil report:Action_Addgroup actionSub:@"" code:@(0) msg:@"addgroup"];
 }
 
 /**

@@ -1,30 +1,39 @@
 package com.tencent.qcloud.tim.demo.helper;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 
+import androidx.annotation.Nullable;
+
 import com.google.gson.Gson;
-import com.tencent.imsdk.TIMCustomElem;
+import com.tencent.imsdk.v2.V2TIMCustomElem;
+import com.tencent.imsdk.v2.V2TIMMessage;
+import com.tencent.liteav.login.ProfileManager;
+import com.tencent.qcloud.tim.demo.DemoApplication;
 import com.tencent.qcloud.tim.demo.R;
+import com.tencent.qcloud.tim.demo.scenes.LiveRoomAnchorActivity;
+import com.tencent.qcloud.tim.demo.scenes.LiveRoomAudienceActivity;
+import com.tencent.qcloud.tim.demo.scenes.net.RoomManager;
 import com.tencent.qcloud.tim.demo.utils.DemoLog;
+import com.tencent.qcloud.tim.tuikit.live.TUIKitLive;
 import com.tencent.qcloud.tim.uikit.modules.chat.ChatLayout;
 import com.tencent.qcloud.tim.uikit.modules.chat.base.BaseInputFragment;
 import com.tencent.qcloud.tim.uikit.modules.chat.layout.input.InputLayout;
 import com.tencent.qcloud.tim.uikit.modules.chat.layout.inputmore.InputMoreActionUnit;
 import com.tencent.qcloud.tim.uikit.modules.chat.layout.message.MessageLayout;
 import com.tencent.qcloud.tim.uikit.modules.chat.layout.message.holder.ICustomMessageViewGroup;
+import com.tencent.qcloud.tim.uikit.modules.chat.layout.message.holder.IGroupMessageClickListener;
 import com.tencent.qcloud.tim.uikit.modules.chat.layout.message.holder.IOnCustomMessageDrawListener;
+import com.tencent.qcloud.tim.uikit.modules.message.LiveMessageInfo;
 import com.tencent.qcloud.tim.uikit.modules.message.MessageInfo;
 import com.tencent.qcloud.tim.uikit.modules.message.MessageInfoUtil;
+import com.tencent.qcloud.tim.uikit.utils.TUIKitConstants;
 import com.tencent.qcloud.tim.uikit.utils.ToastUtil;
-
-import static com.tencent.qcloud.tim.demo.helper.CustomMessage.JSON_VERSION_1_HELLOTIM;
-import static com.tencent.qcloud.tim.demo.helper.CustomMessage.JSON_VERSION_3_ANDROID_IOS_TRTC;
 
 public class ChatLayoutHelper {
 
@@ -37,7 +46,6 @@ public class ChatLayoutHelper {
     }
 
     public void customizeChatLayout(final ChatLayout layout) {
-        CustomAVCallUIController.getInstance().setUISender(layout);
 
 //        //====== NoticeLayout使用范例 ======//
 //        NoticeLayout noticeLayout = layout.getNoticeLayout();
@@ -99,6 +107,21 @@ public class ChatLayoutHelper {
 //
         // 设置自定义的消息渲染时的回调
         messageLayout.setOnCustomMessageDrawListener(new CustomMessageDraw());
+
+        // 设置点击群消息
+        messageLayout.setIGroupMessageClickListener(new IGroupMessageClickListener() {
+
+            @Override
+            public boolean handleLiveMessage(LiveMessageInfo info, String groupId) {
+                String selfUserId = ProfileManager.getInstance().getUserModel().userId;
+                if (String.valueOf(info.anchorId).equals(selfUserId)) {
+                    createRoom(groupId);
+                } else {
+                    checkRoomExist(info);
+                }
+                return true;
+            }
+        });
 //
 //        // 新增一个PopMenuAction
 //        PopMenuAction action = new PopMenuAction();
@@ -128,7 +151,7 @@ public class ChatLayoutHelper {
 
 
         //====== InputLayout使用范例 ======//
-        InputLayout inputLayout = layout.getInputLayout();
+        final InputLayout inputLayout = layout.getInputLayout();
 
 //        // TODO 隐藏音频输入的入口，可以打开下面代码测试
 //        inputLayout.disableAudioInput(true);
@@ -153,19 +176,10 @@ public class ChatLayoutHelper {
 //        inputLayout.disableSendFileAction(true);
 //        inputLayout.disableSendPhotoAction(true);
 //        inputLayout.disableVideoRecordAction(true);
-        // TODO 可以自己增加一些功能，可以打开下面代码测试
-        // 这里增加一个视频通话
-//        InputMoreActionUnit videoCall = new InputMoreActionUnit();
-//        videoCall.setIconResId(com.tencent.qcloud.tim.uikit.R.drawable.ic_more_video);
-//        videoCall.setTitleId(R.string.video_call);
-//        videoCall.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                CustomAVCallUIController.getInstance().createVideoCallRequest();
-//            }
-//        });
-//        inputLayout.addAction(videoCall);
+        inputLayout.enableAudioCall();
+        inputLayout.enableVideoCall();
 
+        // TODO 可以自己增加一些功能，可以打开下面代码测试
         // 增加一个欢迎提示富文本
         InputMoreActionUnit unit = new InputMoreActionUnit();
         unit.setIconResId(R.drawable.custom);
@@ -174,8 +188,12 @@ public class ChatLayoutHelper {
             @Override
             public void onClick(View v) {
                 Gson gson = new Gson();
-                CustomMessage customMessage = new CustomMessage();
-                String data = gson.toJson(customMessage);
+                CustomHelloMessage customHelloMessage = new CustomHelloMessage();
+                customHelloMessage.version = TUIKitConstants.version;
+                customHelloMessage.text = "欢迎加入云通信IM大家庭！";
+                customHelloMessage.link = "https://cloud.tencent.com/document/product/269/3794";
+
+                String data = gson.toJson(customHelloMessage);
                 MessageInfo info = MessageInfoUtil.buildCustomMessage(data);
                 layout.sendMessage(info, false);
             }
@@ -195,8 +213,8 @@ public class ChatLayoutHelper {
                     ToastUtil.toastShortMessage("自定义的按钮1");
                     if (getChatLayout() != null) {
                         Gson gson = new Gson();
-                        CustomMessage customMessage = new CustomMessage();
-                        String data = gson.toJson(customMessage);
+                        CustomHelloMessage customHelloMessage = new CustomHelloMessage();
+                        String data = gson.toJson(customHelloMessage);
                         MessageInfo info = MessageInfoUtil.buildCustomMessage(data);
                         getChatLayout().sendMessage(info, false);
                     }
@@ -209,8 +227,8 @@ public class ChatLayoutHelper {
                     ToastUtil.toastShortMessage("自定义的按钮2");
                     if (getChatLayout() != null) {
                         Gson gson = new Gson();
-                        CustomMessage customMessage = new CustomMessage();
-                        String data = gson.toJson(customMessage);
+                        CustomHelloMessage customHelloMessage = new CustomHelloMessage();
+                        String data = gson.toJson(customHelloMessage);
                         MessageInfo info = MessageInfoUtil.buildCustomMessage(data);
                         getChatLayout().sendMessage(info, false);
                     }
@@ -232,27 +250,56 @@ public class ChatLayoutHelper {
         @Override
         public void onDraw(ICustomMessageViewGroup parent, MessageInfo info) {
             // 获取到自定义消息的json数据
-            if (!(info.getElement() instanceof TIMCustomElem)) {
+            if (info.getTimMessage().getElemType() != V2TIMMessage.V2TIM_ELEM_TYPE_CUSTOM) {
                 return;
             }
-            TIMCustomElem elem = (TIMCustomElem) info.getElement();
+            V2TIMCustomElem elem = info.getTimMessage().getCustomElem();
             // 自定义的json数据，需要解析成bean实例
-            CustomMessage data = null;
+            CustomHelloMessage data = null;
             try {
-                data = new Gson().fromJson(new String(elem.getData()), CustomMessage.class);
+                data = new Gson().fromJson(new String(elem.getData()), CustomHelloMessage.class);
             } catch (Exception e) {
-                DemoLog.e(TAG, "invalid json: " + new String(elem.getData()) + " " + e.getMessage());
+                DemoLog.w(TAG, "invalid json: " + new String(elem.getData()) + " " + e.getMessage());
             }
             if (data == null) {
                 DemoLog.e(TAG, "No Custom Data: " + new String(elem.getData()));
-            } else if (data.version == JSON_VERSION_1_HELLOTIM) {
+            } else if (data.version == TUIKitConstants.JSON_VERSION_1
+                    || (data.version == TUIKitConstants.JSON_VERSION_4 && data.businessID.equals("text_link"))) {
                 CustomHelloTIMUIController.onDraw(parent, data);
-            } else if (data.version == JSON_VERSION_3_ANDROID_IOS_TRTC) {
-                CustomAVCallUIController.getInstance().onDraw(parent, data);
             } else {
-                DemoLog.e(TAG, "unsupported version: " + data.version);
+                DemoLog.w(TAG, "unsupported version: " + data);
             }
         }
     }
 
+    private static void checkRoomExist(final LiveMessageInfo info) {
+        RoomManager.getInstance().checkRoomExist(RoomManager.TYPE_GROUP_LIVE, info.roomId, new RoomManager.ActionCallback() {
+            @Override
+            public void onSuccess() {
+                enterRoom(info);
+            }
+
+            @Override
+            public void onFailed(int code, String msg) {
+                ToastUtil.toastShortMessage(TUIKitLive.getAppContext().getString(R.string.live_is_over));
+            }
+        });
+    }
+
+    private static void createRoom(String groupId) {
+        LiveRoomAnchorActivity.start(DemoApplication.instance(), groupId);
+    }
+
+    private static void enterRoom(LiveMessageInfo info) {
+        Intent intent = new Intent(DemoApplication.instance(), LiveRoomAudienceActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.putExtra(RoomManager.ROOM_TITLE, info.roomName);
+        intent.putExtra(RoomManager.GROUP_ID, info.roomId);
+        intent.putExtra(RoomManager.USE_CDN_PLAY, false);
+        intent.putExtra(RoomManager.ANCHOR_ID, info.anchorId);
+        intent.putExtra(RoomManager.PUSHER_NAME, info.anchorName);
+        intent.putExtra(RoomManager.COVER_PIC, info.roomCover);
+        intent.putExtra(RoomManager.PUSHER_AVATAR, info.roomCover);
+        DemoApplication.instance().startActivity(intent);
+    }
 }
